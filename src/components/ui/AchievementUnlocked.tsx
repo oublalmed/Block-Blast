@@ -1,8 +1,8 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import type { Achievement } from '../types/achievements';
-import { getCategoryColor } from '../types/achievements';
+import type { Achievement } from '../../types/achievements';
+import { getCategoryColor } from '../../types/achievements';
 
 interface AchievementUnlockedProps {
   achievement: Achievement | null;
