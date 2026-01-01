@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion';
-import { Play, Trophy, Target, ShoppingBag, Star, Lock, Crown, HelpCircle, Award } from 'lucide-react';
+import { Play, Trophy, Target, ShoppingBag, Star, Lock, Crown, HelpCircle, Award, ChevronDown } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
 import { getLevelData } from '../utils/gameLogic';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Tutorial, useTutorial } from '../components/ui/Tutorial';
 
 interface HomeScreenProps {
@@ -35,18 +35,23 @@ export const HomeScreen = ({
   }, [initializeDailyChallenges]);
 
   const { showTutorial, handleComplete, handleSkip, resetTutorial } = useTutorial();
+  const [levelsToShow, setLevelsToShow] = useState(12);
 
   const completedChallenges = dailyChallenges.filter((c) => c.completed).length;
   const hasActiveChallenges = dailyChallenges.length > completedChallenges;
 
-  // Get next 6 levels to display
-  const levels = Array.from({ length: 6 }, (_, i) => {
+  // Get levels to display with load more functionality
+  const levels = Array.from({ length: levelsToShow }, (_, i) => {
     const levelId = currentLevel + i;
     const data = getLevelData(levelId);
     const isUnlocked = levelId === 1 || completedLevels.includes(levelId - 1);
     const isCompleted = completedLevels.includes(levelId);
     return { ...data, unlocked: isUnlocked, completed: isCompleted };
   });
+
+  const handleLoadMore = () => {
+    setLevelsToShow((prev) => prev + 12);
+  };
 
   return (
     <div className="relative w-full min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 overflow-x-hidden overflow-y-auto">
@@ -265,12 +270,17 @@ export const HomeScreen = ({
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
         >
-          <h2 className="text-white font-bold text-xl mb-4 flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-yellow-400" />
-            Levels
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-white font-bold text-xl flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-yellow-400" />
+              Levels
+            </h2>
+            <div className="text-white/60 text-sm font-semibold">
+              {currentLevel} - {currentLevel + levelsToShow - 1}
+            </div>
+          </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
             {levels.map((level, index) => (
               <LevelCard
                 key={level.id}
@@ -280,6 +290,34 @@ export const HomeScreen = ({
               />
             ))}
           </div>
+
+          {/* Load More Button */}
+          {levelsToShow < 50 && (
+            <motion.button
+              onClick={handleLoadMore}
+              className="
+                w-full
+                bg-slate-700/50
+                hover:bg-slate-600/50
+                text-white
+                font-semibold
+                py-3
+                px-6
+                rounded-xl
+                transition-all
+                flex items-center justify-center gap-2
+                border border-white/10
+                mb-6
+              "
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <span>Load More Levels</span>
+              <ChevronDown className="w-5 h-5" />
+            </motion.button>
+          )}
         </motion.div>
 
         {/* Premium Upsell (if not premium) */}

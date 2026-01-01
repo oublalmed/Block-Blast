@@ -134,19 +134,42 @@ export const getStarsForScore = (score: number, targetScore: number): number => 
 };
 
 export const getLevelData = (levelId: number) => {
+  // Difficulty progression: every 10 levels
   const difficulties = ['easy', 'medium', 'hard', 'expert'] as const;
   const difficultyIndex = Math.floor((levelId - 1) / 10);
   const difficulty = difficulties[Math.min(difficultyIndex, 3)];
 
-  const baseScore = 500;
-  const targetScore = baseScore + (levelId - 1) * 200;
+  // Progressive target score with better scaling
+  let targetScore: number;
+
+  if (levelId <= 10) {
+    // Easy levels: 500 - 2300 (increments of 200)
+    targetScore = 500 + (levelId - 1) * 200;
+  } else if (levelId <= 20) {
+    // Medium levels: 2600 - 5300 (increments of 300)
+    targetScore = 2300 + (levelId - 10) * 300;
+  } else if (levelId <= 30) {
+    // Hard levels: 5700 - 9300 (increments of 400)
+    targetScore = 5300 + (levelId - 20) * 400;
+  } else if (levelId <= 40) {
+    // Expert levels: 9800 - 14300 (increments of 500)
+    targetScore = 9300 + (levelId - 30) * 500;
+  } else {
+    // Master levels: 14900+ (increments of 600)
+    targetScore = 14300 + (levelId - 40) * 600;
+  }
+
+  // Reward scales with difficulty
+  const rewardMultiplier = difficulty === 'expert' ? 30 :
+                          difficulty === 'hard' ? 20 :
+                          difficulty === 'medium' ? 15 : 10;
 
   return {
     id: levelId,
     name: `Level ${levelId}`,
     targetScore,
     difficulty,
-    reward: levelId * 10,
+    reward: levelId * rewardMultiplier,
     unlocked: levelId === 1,
     completed: false,
     stars: 0,
