@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion';
-import { Play, Trophy, Target, ShoppingBag, Star, Lock, Crown } from 'lucide-react';
+import { Play, Trophy, Target, ShoppingBag, Star, Lock, Crown, HelpCircle } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
 import { getLevelData } from '../utils/gameLogic';
 import { useEffect } from 'react';
+import { Tutorial, useTutorial } from '../components/ui/Tutorial';
 
 interface HomeScreenProps {
   onStartGame: () => void;
@@ -30,6 +31,8 @@ export const HomeScreen = ({
   useEffect(() => {
     initializeDailyChallenges();
   }, [initializeDailyChallenges]);
+
+  const { showTutorial, handleComplete, handleSkip, resetTutorial } = useTutorial();
 
   const completedChallenges = dailyChallenges.filter((c) => c.completed).length;
   const hasActiveChallenges = dailyChallenges.length > completedChallenges;
@@ -83,25 +86,45 @@ export const HomeScreen = ({
             </div>
           </div>
 
-          <button
-            onClick={onOpenShop}
-            className="
-              bg-gradient-to-br from-yellow-500 to-orange-500
-              text-white
-              font-bold
-              px-4 py-2
-              rounded-xl
-              shadow-lg shadow-yellow-500/30
-              hover:shadow-yellow-500/50
-              hover:scale-105
-              active:scale-95
-              transition-all
-              flex items-center gap-2
-            "
-          >
-            <ShoppingBag className="w-5 h-5" />
-            <span>💰 {coins}</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={resetTutorial}
+              className="
+                w-10 h-10
+                bg-slate-700/50
+                rounded-xl
+                flex items-center justify-center
+                text-white/70
+                hover:text-white
+                hover:bg-slate-600/50
+                active:scale-95
+                transition-all
+              "
+              aria-label="How to play"
+              title="How to Play"
+            >
+              <HelpCircle className="w-5 h-5" />
+            </button>
+            <button
+              onClick={onOpenShop}
+              className="
+                bg-gradient-to-br from-yellow-500 to-orange-500
+                text-white
+                font-bold
+                px-4 py-2
+                rounded-xl
+                shadow-lg shadow-yellow-500/30
+                hover:shadow-yellow-500/50
+                hover:scale-105
+                active:scale-95
+                transition-all
+                flex items-center gap-2
+              "
+            >
+              <ShoppingBag className="w-5 h-5" />
+              <span>💰 {coins}</span>
+            </button>
+          </div>
         </motion.div>
 
         {/* Stats Cards */}
@@ -259,6 +282,13 @@ export const HomeScreen = ({
           </motion.button>
         )}
       </div>
+
+      {/* Tutorial */}
+      <Tutorial
+        isOpen={showTutorial}
+        onComplete={handleComplete}
+        onSkip={handleSkip}
+      />
     </div>
   );
 };
