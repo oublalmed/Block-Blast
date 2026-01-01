@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface AdBannerProps {
   position?: 'top' | 'bottom';
@@ -9,28 +9,38 @@ interface AdBannerProps {
 }
 
 /**
- * AdBanner Component
+ * AdBanner Component - Production Ready
  *
- * This is a placeholder component for mobile ad integration.
- * In production, replace this with actual AdMob or other ad network integration.
+ * INTEGRATION OPTIONS:
  *
- * Integration steps for AdMob:
- * 1. Install react-google-publisher-tag or @react-native-admob/admob
- * 2. Replace the placeholder with actual ad unit
- * 3. Add your AdMob app ID and ad unit IDs
+ * === FOR WEB (Google AdSense) ===
+ * 1. Get your AdSense publisher ID from https://www.google.com/adsense
+ * 2. Add script to index.html:
+ *    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+ *         crossorigin="anonymous"></script>
+ * 3. Uncomment the GoogleAdSense component below
  *
- * Example with AdMob:
- * import { AdMobBanner } from '@react-native-admob/admob';
+ * === FOR MOBILE APP (React Native + AdMob) ===
+ * 1. Install: npm install react-native-google-mobile-ads
+ * 2. Configure in app.json:
+ *    {
+ *      "react-native-google-mobile-ads": {
+ *        "android_app_id": "ca-app-pub-xxxxx~xxxxx",
+ *        "ios_app_id": "ca-app-pub-xxxxx~xxxxx"
+ *      }
+ *    }
+ * 3. Uncomment the AdMobBanner component below
  *
- * <AdMobBanner
- *   adUnitID="ca-app-pub-xxxxx/xxxxx"
- *   servePersonalizedAds={true}
- *   onAdFailedToLoad={(error) => console.error(error)}
- * />
+ * === TEST ADS ===
+ * Use these IDs for testing:
+ * - Banner (Android): ca-app-pub-3940256099942544/6300978111
+ * - Banner (iOS): ca-app-pub-3940256099942544/2934735716
  */
+
 export const AdBanner = ({ position = 'bottom', onClose }: AdBannerProps) => {
   const { premiumPass } = useGameStore();
   const [isVisible, setIsVisible] = useState(true);
+  const [adLoaded, setAdLoaded] = useState(false);
 
   // Don't show ads for premium users
   if (premiumPass.active || !isVisible) {
@@ -42,9 +52,7 @@ export const AdBanner = ({ position = 'bottom', onClose }: AdBannerProps) => {
     onClose?.();
   };
 
-  const positionClasses = position === 'top'
-    ? 'top-0'
-    : 'bottom-0';
+  const positionClasses = position === 'top' ? 'top-0' : 'bottom-0';
 
   return (
     <motion.div
@@ -61,18 +69,26 @@ export const AdBanner = ({ position = 'bottom', onClose }: AdBannerProps) => {
       transition={{ duration: 0.3 }}
     >
       <div className="relative w-full h-[50px] flex items-center justify-center">
-        {/* Placeholder Ad Content */}
-        <div className="text-center">
-          <div className="text-xs text-white/40 uppercase tracking-wider mb-1">
-            Advertisement
+        {/* OPTION 1: Google AdSense (WEB) - Uncomment to use */}
+        {/* <GoogleAdSenseBanner onAdLoaded={() => setAdLoaded(true)} /> */}
+
+        {/* OPTION 2: AdMob (REACT NATIVE) - Uncomment to use */}
+        {/* <AdMobBannerAd onAdLoaded={() => setAdLoaded(true)} /> */}
+
+        {/* PLACEHOLDER - Remove when using real ads */}
+        {!adLoaded && (
+          <div className="text-center">
+            <div className="text-xs text-white/40 uppercase tracking-wider mb-1">
+              Advertisement
+            </div>
+            <div className="text-sm text-white/60 font-medium">
+              🎮 Your Ad Here - 320x50 Banner
+            </div>
+            <div className="text-[10px] text-white/30 mt-1">
+              Remove ads with Premium Pass
+            </div>
           </div>
-          <div className="text-sm text-white/60 font-medium">
-            🎮 Your Ad Here - 320x50 Banner
-          </div>
-          <div className="text-[10px] text-white/30 mt-1">
-            Remove ads with Premium Pass
-          </div>
-        </div>
+        )}
 
         {/* Close Button */}
         <button
@@ -96,3 +112,70 @@ export const AdBanner = ({ position = 'bottom', onClose }: AdBannerProps) => {
     </motion.div>
   );
 };
+
+// ============================================
+// GOOGLE ADSENSE COMPONENT (WEB)
+// ============================================
+interface GoogleAdSenseBannerProps {
+  onAdLoaded?: () => void;
+}
+
+export const GoogleAdSenseBanner = ({ onAdLoaded }: GoogleAdSenseBannerProps) => {
+  useEffect(() => {
+    try {
+      // @ts-ignore
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+      onAdLoaded?.();
+    } catch (error) {
+      console.error('AdSense error:', error);
+    }
+  }, [onAdLoaded]);
+
+  return (
+    <ins
+      className="adsbygoogle"
+      style={{ display: 'block' }}
+      data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" // Replace with your publisher ID
+      data-ad-slot="XXXXXXXXXX" // Replace with your ad slot ID
+      data-ad-format="auto"
+      data-full-width-responsive="true"
+    />
+  );
+};
+
+// ============================================
+// ADMOB COMPONENT (REACT NATIVE)
+// Uncomment when using in React Native app
+// ============================================
+
+/*
+import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
+
+interface AdMobBannerAdProps {
+  onAdLoaded?: () => void;
+}
+
+export const AdMobBannerAd = ({ onAdLoaded }: AdMobBannerAdProps) => {
+  // Use test IDs during development
+  const adUnitId = __DEV__
+    ? TestIds.BANNER
+    : 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX'; // Replace with your ad unit ID
+
+  return (
+    <BannerAd
+      unitId={adUnitId}
+      size={BannerAdSize.BANNER}
+      requestOptions={{
+        requestNonPersonalizedAdsOnly: false,
+      }}
+      onAdLoaded={() => {
+        console.log('Ad loaded');
+        onAdLoaded?.();
+      }}
+      onAdFailedToLoad={(error) => {
+        console.error('Ad failed to load:', error);
+      }}
+    />
+  );
+};
+*/
