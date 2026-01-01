@@ -172,14 +172,16 @@ export const GameScreen = ({
   };
 
   return (
-    <div className="relative w-full h-full min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
+    <div className="relative w-full min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
       {/* Starry Background */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(255,255,255,0.05),transparent_50%)] animate-twinkle pointer-events-none" />
 
       {/* Main Content */}
-      <div className="relative z-10 flex flex-col items-center justify-between min-h-screen p-4 pb-20 safe-area-padding">
+      <div className="relative z-10 flex flex-col items-center h-screen p-2 sm:p-4 pb-4 safe-area-padding">
         {/* Header */}
-        <Header score={score} onMenuClick={onHome} showMenu={!!onHome} />
+        <div className="w-full mb-2">
+          <Header score={score} onMenuClick={onHome} showMenu={!!onHome} />
+        </div>
 
         {/* Level Progress (if in level mode) */}
         {levelMode && targetScore && (
@@ -210,8 +212,8 @@ export const GameScreen = ({
         )}
 
         {/* Game Board */}
-        <div className="flex-1 flex items-center justify-center w-full max-w-md">
-          <div className="w-full aspect-square max-w-[min(95vw,450px)]" data-board>
+        <div className="flex-1 flex items-center justify-center w-full my-2 sm:my-4">
+          <div className="w-full aspect-square max-w-[min(90vw,420px)] sm:max-w-[min(85vw,450px)]" data-board>
             <Board
               grid={grid}
               size={8}
@@ -223,14 +225,16 @@ export const GameScreen = ({
         </div>
 
         {/* Piece Tray */}
-        <PieceTray
-          pieces={pieces}
-          onPieceDragStart={handlePieceDragStart}
-          onPieceDragEnd={handlePieceDragEnd}
-          draggingPiece={draggingPiece}
-          unplaceablePieces={unplaceablePieces}
-          dragPosition={dragPosition}
-        />
+        <div className="w-full mt-auto">
+          <PieceTray
+            pieces={pieces}
+            onPieceDragStart={handlePieceDragStart}
+            onPieceDragEnd={handlePieceDragEnd}
+            draggingPiece={draggingPiece}
+            unplaceablePieces={unplaceablePieces}
+            dragPosition={dragPosition}
+          />
+        </div>
       </div>
 
       {/* Combo Popup */}

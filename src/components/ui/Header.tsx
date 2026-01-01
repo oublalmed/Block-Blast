@@ -48,9 +48,11 @@ export const Header = ({ score, showMenu = true, onMenuClick }: HeaderProps) => 
       </div>
 
       {/* Score Display */}
-      <div className="flex items-center gap-2">
-        {/* Coins */}
-        <ScoreBox label="Coins" value={coins} icon="💰" variant="yellow" />
+      <div className="flex items-center gap-1 sm:gap-2">
+        {/* Coins - Hidden on very small screens */}
+        <div className="hidden xs:block">
+          <ScoreBox label="Coins" value={coins} icon="💰" variant="yellow" />
+        </div>
 
         {/* Current Score */}
         <ScoreBox label="Score" value={score} variant="green" />

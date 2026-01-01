@@ -51,18 +51,19 @@ export const Board = ({
       className="
         relative
         bg-gradient-to-br from-slate-800 to-slate-900
-        rounded-2xl
-        p-1.5 sm:p-2
+        rounded-xl sm:rounded-2xl
+        p-1 sm:p-2
         shadow-2xl
         border-2 border-white/5
+        w-full h-full
       "
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="relative bg-black/30 rounded-xl p-0.5 sm:p-1">
+      <div className="relative bg-black/30 rounded-lg sm:rounded-xl p-0.5 sm:p-1 w-full h-full">
         <div
-          className="grid gap-0.5 sm:gap-1"
+          className="grid gap-[2px] sm:gap-1 w-full h-full"
           style={{
             gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))`,
             gridTemplateRows: `repeat(${size}, minmax(0, 1fr))`,

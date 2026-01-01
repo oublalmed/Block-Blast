@@ -43,7 +43,7 @@ export const Piece = ({
     grid[y][x] = true;
   });
 
-  const blockSize = isDragging ? 'w-6 h-6' : 'w-5 h-5 sm:w-6 sm:h-6';
+  const blockSize = isDragging ? 'w-7 h-7 sm:w-8 sm:h-8' : 'w-6 h-6 sm:w-7 sm:h-7';
 
   const containerStyle = isDragging && position
     ? {

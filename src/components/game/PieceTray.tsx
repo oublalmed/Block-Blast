@@ -22,15 +22,15 @@ export const PieceTray = ({
   return (
     <motion.div
       className="
-        w-full max-w-md
+        w-full max-w-md mx-auto
         bg-gradient-to-br from-slate-800 to-slate-900
-        rounded-2xl
-        p-4
+        rounded-xl sm:rounded-2xl
+        p-2 sm:p-4
         shadow-2xl
         border-2 border-white/5
         flex items-center justify-around
-        gap-4
-        min-h-[120px]
+        gap-2 sm:gap-4
+        min-h-[100px] sm:min-h-[120px]
       "
       initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
@@ -39,7 +39,7 @@ export const PieceTray = ({
       {pieces.map((piece) => (
         <div
           key={piece.id}
-          className="flex-1 flex items-center justify-center min-h-[100px]"
+          className="flex-1 flex items-center justify-center min-h-[80px] sm:min-h-[100px]"
         >
           {!piece.placed && (
             <Piece
