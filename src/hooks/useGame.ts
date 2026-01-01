@@ -19,7 +19,7 @@ export const useGame = (gridSize: number = 8) => {
   const [isGameOver, setIsGameOver] = useState(false);
   const [moves, setMoves] = useState(0);
 
-  const { premiumPass, updateScore, incrementGamesPlayed } = useGameStore();
+  const { premiumPass, updateScore, incrementGamesPlayed, updateMaxCombo, incrementPerfectClears } = useGameStore();
 
   useEffect(() => {
     initGame();
@@ -70,12 +70,23 @@ export const useGame = (gridSize: number = 8) => {
           const lineScore = linesCleared * linesCleared * 100;
           const comboBonus = combo > 0 ? (combo + 1) * 50 : 0;
           newScore += lineScore + comboBonus;
-          setCombo((c) => c + 1);
+          const newCombo = combo + 1;
+          setCombo(newCombo);
+
+          // Update max combo achievement tracker
+          updateMaxCombo(newCombo);
 
           vibrate(linesCleared > 1 ? [50, 100, 50] : 30);
 
           setTimeout(() => {
-            setGrid(clearLines(newGrid, cellsToCleare));
+            const clearedGrid = clearLines(newGrid, cellsToCleare);
+            setGrid(clearedGrid);
+
+            // Check for perfect clear (entire board empty)
+            const isBoardEmpty = clearedGrid.every((row) => row.every((cell) => cell === null));
+            if (isBoardEmpty) {
+              incrementPerfectClears();
+            }
           }, 500);
         } else {
           setCombo(0);

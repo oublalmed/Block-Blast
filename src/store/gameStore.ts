@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { UserProgress, DailyChallenge } from '../types/game';
+import { ACHIEVEMENTS, type Achievement } from '../types/achievements';
 
 interface GameStore extends UserProgress {
   // Actions
@@ -16,6 +17,12 @@ interface GameStore extends UserProgress {
   resetProgress: () => void;
   updateLastPlayedDate: () => void;
   initializeDailyChallenges: () => void;
+  // Achievements
+  checkAndUnlockAchievements: () => Achievement[];
+  unlockAchievement: (achievementId: string) => void;
+  getAchievements: () => Achievement[];
+  updateMaxCombo: (combo: number) => void;
+  incrementPerfectClears: () => void;
 }
 
 const generateDailyChallenges = (): DailyChallenge[] => {
@@ -78,6 +85,10 @@ const initialState: UserProgress = {
   },
   dailyChallenges: generateDailyChallenges(),
   lastPlayedDate: new Date().toISOString().split('T')[0],
+  achievements: [],
+  maxCombo: 0,
+  perfectClears: 0,
+  consecutiveDays: 1,
 };
 
 export const useGameStore = create<GameStore>()(
@@ -203,11 +214,107 @@ export const useGameStore = create<GameStore>()(
         const today = new Date().toISOString().split('T')[0];
 
         if (state.lastPlayedDate !== today) {
+          // Calculate consecutive days
+          const lastDate = new Date(state.lastPlayedDate);
+          const todayDate = new Date(today);
+          const diffTime = todayDate.getTime() - lastDate.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+          const consecutiveDays = diffDays === 1 ? state.consecutiveDays + 1 : 1;
+
           set({
             dailyChallenges: generateDailyChallenges(),
             lastPlayedDate: today,
+            consecutiveDays,
           });
         }
+      },
+
+      // Achievement methods
+      getAchievements: () => {
+        const state = get();
+        return ACHIEVEMENTS.map((achievement) => ({
+          ...achievement,
+          unlocked: state.achievements.includes(achievement.id),
+        }));
+      },
+
+      unlockAchievement: (achievementId: string) => {
+        const state = get();
+        if (!state.achievements.includes(achievementId)) {
+          const achievement = ACHIEVEMENTS.find((a) => a.id === achievementId);
+          if (achievement) {
+            set({
+              achievements: [...state.achievements, achievementId],
+            });
+            // Award coins
+            get().addCoins(achievement.rewardCoins);
+          }
+        }
+      },
+
+      checkAndUnlockAchievements: () => {
+        const state = get();
+        const newlyUnlocked: Achievement[] = [];
+
+        ACHIEVEMENTS.forEach((achievement) => {
+          // Skip if already unlocked
+          if (state.achievements.includes(achievement.id)) {
+            return;
+          }
+
+          let shouldUnlock = false;
+
+          // Check based on category
+          switch (achievement.category) {
+            case 'score':
+              shouldUnlock = state.bestScore >= achievement.requirement;
+              break;
+            case 'games':
+              shouldUnlock = state.gamesPlayed >= achievement.requirement;
+              break;
+            case 'combos':
+              shouldUnlock = state.maxCombo >= achievement.requirement;
+              break;
+            case 'levels':
+              shouldUnlock = state.completedLevels.length >= achievement.requirement;
+              break;
+            case 'perfect':
+              if (achievement.id === 'perfect_clear') {
+                shouldUnlock = state.perfectClears >= achievement.requirement;
+              } else if (achievement.id === 'no_mistakes') {
+                shouldUnlock = state.bestScore >= achievement.requirement;
+              }
+              break;
+            case 'special':
+              if (achievement.id === 'first_game') {
+                shouldUnlock = state.gamesPlayed >= 1;
+              } else if (achievement.id === 'premium_user') {
+                shouldUnlock = state.premiumPass.active;
+              } else if (achievement.id.startsWith('daily_streak_')) {
+                shouldUnlock = state.consecutiveDays >= achievement.requirement;
+              }
+              break;
+          }
+
+          if (shouldUnlock) {
+            get().unlockAchievement(achievement.id);
+            newlyUnlocked.push({ ...achievement, unlocked: true });
+          }
+        });
+
+        return newlyUnlocked;
+      },
+
+      updateMaxCombo: (combo: number) => {
+        const state = get();
+        if (combo > state.maxCombo) {
+          set({ maxCombo: combo });
+        }
+      },
+
+      incrementPerfectClears: () => {
+        set((state) => ({ perfectClears: state.perfectClears + 1 }));
       },
     }),
     {

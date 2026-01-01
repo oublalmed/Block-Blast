@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { HomeScreen } from './screens/HomeScreen';
 import { GameScreen } from './screens/GameScreen';
 import { ShopScreen } from './screens/ShopScreen';
 import { ChallengesScreen } from './screens/ChallengesScreen';
+import { AchievementsScreen } from './screens/AchievementsScreen';
+import { AchievementUnlocked, useAchievementNotifications } from './components/ui/AchievementUnlocked';
 import { useGameStore } from './store/gameStore';
 import { getLevelData } from './utils/gameLogic';
 
-type Screen = 'home' | 'game' | 'level' | 'shop' | 'challenges' | 'challenge';
+type Screen = 'home' | 'game' | 'level' | 'shop' | 'challenges' | 'challenge' | 'achievements';
 
 interface GameConfig {
   mode: 'quick' | 'level' | 'challenge';
@@ -20,7 +22,18 @@ function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [gameConfig, setGameConfig] = useState<GameConfig>({ mode: 'quick' });
 
-  const { completeLevel, completeDailyChallenge, dailyChallenges } = useGameStore();
+  const { completeLevel, completeDailyChallenge, dailyChallenges, checkAndUnlockAchievements } = useGameStore();
+  const { currentAchievement, showMultipleAchievements, closeNotification } = useAchievementNotifications();
+
+  // Check for achievements periodically (when returning to home screen)
+  useEffect(() => {
+    if (currentScreen === 'home') {
+      const newAchievements = checkAndUnlockAchievements();
+      if (newAchievements.length > 0) {
+        showMultipleAchievements(newAchievements);
+      }
+    }
+  }, [currentScreen]);
 
   const handleStartQuickGame = () => {
     setGameConfig({ mode: 'quick' });
@@ -77,6 +90,10 @@ function App() {
     setCurrentScreen('challenges');
   };
 
+  const handleOpenAchievements = () => {
+    setCurrentScreen('achievements');
+  };
+
   const renderScreen = () => {
     switch (currentScreen) {
       case 'home':
@@ -86,6 +103,7 @@ function App() {
             onStartLevel={handleStartLevel}
             onOpenShop={handleOpenShop}
             onOpenChallenges={handleOpenChallenges}
+            onOpenAchievements={handleOpenAchievements}
           />
         );
 
@@ -126,12 +144,16 @@ function App() {
           />
         );
 
+      case 'achievements':
+        return <AchievementsScreen onBack={handleBackToHome} />;
+
       default:
         return <HomeScreen
           onStartGame={handleStartQuickGame}
           onStartLevel={handleStartLevel}
           onOpenShop={handleOpenShop}
           onOpenChallenges={handleOpenChallenges}
+          onOpenAchievements={handleOpenAchievements}
         />;
     }
   };
@@ -150,6 +172,12 @@ function App() {
           {renderScreen()}
         </motion.div>
       </AnimatePresence>
+
+      {/* Achievement Notifications */}
+      <AchievementUnlocked
+        achievement={currentAchievement}
+        onClose={closeNotification}
+      />
     </div>
   );
 }

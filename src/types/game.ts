@@ -66,6 +66,10 @@ export interface UserProgress {
   premiumPass: PremiumPass;
   dailyChallenges: DailyChallenge[];
   lastPlayedDate: string;
+  achievements: string[]; // List of unlocked achievement IDs
+  maxCombo: number; // Highest combo achieved
+  perfectClears: number; // Number of perfect board clears
+  consecutiveDays: number; // Days played in a row
 }
 
 export const PIECE_SHAPES: PieceShape[] = [

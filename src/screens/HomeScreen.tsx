@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Play, Trophy, Target, ShoppingBag, Star, Lock, Crown, HelpCircle } from 'lucide-react';
+import { Play, Trophy, Target, ShoppingBag, Star, Lock, Crown, HelpCircle, Award } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
 import { getLevelData } from '../utils/gameLogic';
 import { useEffect } from 'react';
@@ -10,6 +10,7 @@ interface HomeScreenProps {
   onStartLevel: (levelId: number) => void;
   onOpenShop: () => void;
   onOpenChallenges: () => void;
+  onOpenAchievements: () => void;
 }
 
 export const HomeScreen = ({
@@ -17,6 +18,7 @@ export const HomeScreen = ({
   onStartLevel,
   onOpenShop,
   onOpenChallenges,
+  onOpenAchievements,
 }: HomeScreenProps) => {
   const {
     bestScore,
@@ -182,6 +184,38 @@ export const HomeScreen = ({
         >
           <Play className="w-6 h-6 fill-current" />
           Quick Play
+        </motion.button>
+
+        {/* Achievements Button */}
+        <motion.button
+          onClick={onOpenAchievements}
+          className="
+            w-full
+            bg-gradient-to-br from-yellow-600 to-orange-600
+            text-white
+            font-bold
+            py-4
+            px-6
+            rounded-2xl
+            shadow-lg shadow-yellow-500/20
+            hover:shadow-yellow-500/40
+            hover:scale-105
+            active:scale-95
+            transition-all
+            mb-6
+            flex items-center justify-between
+          "
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.25 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <div className="flex items-center gap-3">
+            <Award className="w-6 h-6" />
+            <span className="text-lg">Achievements</span>
+          </div>
+          <Trophy className="w-5 h-5" />
         </motion.button>
 
         {/* Daily Challenges */}
