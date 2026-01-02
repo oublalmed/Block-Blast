@@ -182,7 +182,7 @@ function App() {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.2 }}
-          className="w-full h-full"
+          className="w-full min-h-full"
         >
           {renderScreen()}
         </motion.div>
