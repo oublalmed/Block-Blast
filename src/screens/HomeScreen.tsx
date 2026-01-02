@@ -136,7 +136,7 @@ export const HomeScreen = ({
 
         {/* Stats Cards */}
         <motion.div
-          className="grid grid-cols-3 gap-3 mb-6"
+          className="grid grid-cols-3 gap-4 mb-7"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -179,16 +179,47 @@ export const HomeScreen = ({
             active:scale-95
             transition-all
             flex items-center justify-center gap-3
-            mb-6
+            mb-7
+            relative
+            overflow-hidden
           "
           initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
+          animate={{
+            opacity: 1,
+            scale: 1,
+            boxShadow: [
+              '0 0 20px rgba(34, 197, 94, 0.4)',
+              '0 0 30px rgba(34, 197, 94, 0.6)',
+              '0 0 20px rgba(34, 197, 94, 0.4)',
+            ]
+          }}
+          transition={{
+            delay: 0.2,
+            boxShadow: {
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }
+          }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          <Play className="w-6 h-6 fill-current" />
-          Quick Play
+          {/* Animated shimmer effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+          <motion.div
+            animate={{
+              scale: [1, 1.1, 1],
+              rotate: [0, 5, -5, 0]
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          >
+            <Play className="w-6 h-6 fill-current" />
+          </motion.div>
+          <span className="relative">Quick Play</span>
         </motion.button>
 
         {/* Achievements Button */}
@@ -207,7 +238,7 @@ export const HomeScreen = ({
             hover:scale-105
             active:scale-95
             transition-all
-            mb-6
+            mb-7
             flex items-center justify-between
           "
           initial={{ opacity: 0, scale: 0.9 }}
@@ -240,7 +271,7 @@ export const HomeScreen = ({
               hover:scale-105
               active:scale-95
               transition-all
-              mb-6
+              mb-7
               relative
               overflow-hidden
             "
@@ -254,7 +285,7 @@ export const HomeScreen = ({
                 <Target className="w-6 h-6" />
                 <div className="text-left">
                   <div className="font-black text-lg">Daily Challenges</div>
-                  <div className="text-sm text-white/80">
+                  <div className="text-sm text-white/90">
                     {completedChallenges}/{dailyChallenges.length} completed
                   </div>
                 </div>
@@ -270,17 +301,17 @@ export const HomeScreen = ({
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
         >
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-5">
             <h2 className="text-white font-bold text-xl flex items-center gap-2">
               <Trophy className="w-5 h-5 text-yellow-400" />
               Levels
             </h2>
-            <div className="text-white/60 text-sm font-semibold">
+            <div className="text-white/70 text-sm font-semibold">
               {currentLevel} - {currentLevel + levelsToShow - 1}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
             {levels.map((level, index) => (
               <LevelCard
                 key={level.id}
@@ -370,7 +401,7 @@ const StatCard = ({ icon, label, value }: any) => {
   return (
     <div className="bg-slate-800/50 rounded-xl p-3 border border-white/10">
       <div className={`text-white mb-2 flex justify-center`}>{icon}</div>
-      <div className="text-[10px] text-white/60 uppercase tracking-wider text-center mb-1">
+      <div className="text-[10px] text-white/70 uppercase tracking-wider text-center mb-1">
         {label}
       </div>
       <div className="text-lg font-bold text-white text-center">{value}</div>
@@ -417,7 +448,7 @@ const LevelCard = ({ level, onClick, delay }: any) => {
         <div className={`text-xs font-semibold bg-gradient-to-r ${difficultyColors[level.difficulty] || 'from-green-500 to-green-600'} bg-clip-text text-transparent mb-2`}>
           {level.difficulty.toUpperCase()}
         </div>
-        <div className="text-xs text-white/60 mb-2">
+        <div className="text-xs text-white/70 mb-2">
           Target: {level.targetScore.toLocaleString()}
         </div>
         {level.completed && (
