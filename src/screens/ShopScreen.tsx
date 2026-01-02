@@ -1,9 +1,11 @@
 import { motion } from 'framer-motion';
-import { ArrowLeft, Crown, Check, Zap, Gift, Star, X, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, Crown, Check, Zap, Gift, Star, X, ShoppingCart, CreditCard } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { POWERUPS } from '../types/powerups';
 import type { PowerUpType } from '../types/powerups';
+import { createPremiumCheckoutSession, checkPaymentStatus } from '../services/stripe';
+import { PREMIUM_PASS } from '../config/payment';
 
 interface ShopScreenProps {
   onBack: () => void;
@@ -14,16 +16,39 @@ export const ShopScreen = ({ onBack }: ShopScreenProps) => {
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [selectedPowerUp, setSelectedPowerUp] = useState<PowerUpType | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
-  const handlePurchasePremium = () => {
-    // In production, integrate with actual payment system
-    // For demo, we'll use coins
-    const success = spendCoins(1000);
-    if (success) {
+  // Check for successful payment on component mount
+  useEffect(() => {
+    const { success, sessionId } = checkPaymentStatus();
+    if (success && sessionId) {
+      // Payment successful! Activate premium pass
       activatePremiumPass();
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+      // Show success message
+      alert('🎉 Premium Pass activated! Enjoy your benefits!');
+    }
+  }, [activatePremiumPass]);
+
+  const handlePurchasePremium = async () => {
+    setIsProcessingPayment(true);
+    try {
+      // Create Stripe checkout session and redirect to payment page
+      const checkoutUrl = await createPremiumCheckoutSession();
+
+      if (checkoutUrl) {
+        // Redirect to Stripe Checkout
+        window.location.href = checkoutUrl;
+      } else {
+        alert('❌ Unable to process payment. Please try again or contact support.');
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      alert('❌ Payment failed. Please try again.');
+    } finally {
+      setIsProcessingPayment(false);
       setShowPurchaseModal(false);
-    } else {
-      alert('Not enough coins! Play more to earn coins.');
     }
   };
 
@@ -223,6 +248,7 @@ export const ShopScreen = ({ onBack }: ShopScreenProps) => {
             {!premiumPass.active ? (
               <motion.button
                 onClick={() => setShowPurchaseModal(true)}
+                disabled={isProcessingPayment}
                 className="
                   w-full
                   bg-gradient-to-r from-yellow-500 to-orange-500
@@ -237,12 +263,15 @@ export const ShopScreen = ({ onBack }: ShopScreenProps) => {
                   active:scale-95
                   transition-all
                   flex items-center justify-center gap-2
+                  disabled:opacity-50
+                  disabled:cursor-not-allowed
                 "
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={!isProcessingPayment ? { scale: 1.05 } : {}}
+                whileTap={!isProcessingPayment ? { scale: 0.95 } : {}}
               >
                 <Crown className="w-6 h-6 fill-current" />
-                <span>Upgrade Now - 1000 Coins</span>
+                <span>Upgrade Now - ${PREMIUM_PASS.price}</span>
+                <CreditCard className="w-5 h-5" />
               </motion.button>
             ) : (
               <div className="text-center">
@@ -407,23 +436,42 @@ export const ShopScreen = ({ onBack }: ShopScreenProps) => {
             <div className="text-center mb-6">
               <Crown className="w-16 h-16 text-yellow-400 fill-current mx-auto mb-4" />
               <h3 className="text-white font-bold text-2xl mb-2">Upgrade to Premium?</h3>
-              <p className="text-white/60 text-sm">
-                Get all premium benefits for 1000 coins
+              <p className="text-white/60 text-sm mb-4">
+                {PREMIUM_PASS.description}
               </p>
+
+              {/* Price Display */}
+              <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl p-4 border border-yellow-500/30">
+                <div className="text-3xl font-black text-yellow-300 mb-1">
+                  ${PREMIUM_PASS.price}
+                </div>
+                <div className="text-xs text-white/60 uppercase tracking-wider">
+                  One-time payment • Secure checkout via Stripe
+                </div>
+              </div>
             </div>
 
             <div className="flex gap-3">
               <button
                 onClick={() => setShowPurchaseModal(false)}
-                className="flex-1 bg-slate-700 text-white font-semibold py-3 rounded-xl hover:bg-slate-600 active:scale-95 transition-all"
+                disabled={isProcessingPayment}
+                className="flex-1 bg-slate-700 text-white font-semibold py-3 rounded-xl hover:bg-slate-600 active:scale-95 transition-all disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handlePurchasePremium}
-                className="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold py-3 rounded-xl hover:scale-105 active:scale-95 transition-all"
+                disabled={isProcessingPayment}
+                className="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold py-3 rounded-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                Confirm
+                {isProcessingPayment ? (
+                  <>Processing...</>
+                ) : (
+                  <>
+                    <CreditCard className="w-5 h-5" />
+                    Pay ${PREMIUM_PASS.price}
+                  </>
+                )}
               </button>
             </div>
           </motion.div>

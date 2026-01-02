@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
 import { useState, useEffect } from 'react';
+import { loadAd, trackAdImpression, getAdUnitConfig, shouldShowAds } from '../../services/ads';
 
 interface AdBannerProps {
   position?: 'top' | 'bottom';
@@ -43,9 +44,16 @@ export const AdBanner = ({ position = 'bottom', onClose }: AdBannerProps) => {
   const [adLoaded, setAdLoaded] = useState(false);
 
   // Don't show ads for premium users
-  if (premiumPass.active || !isVisible) {
+  if (!shouldShowAds(premiumPass.active) || !isVisible) {
     return null;
   }
+
+  // Track ad impression when component mounts
+  useEffect(() => {
+    if (isVisible) {
+      trackAdImpression(position);
+    }
+  }, [isVisible, position]);
 
   const handleClose = () => {
     setIsVisible(false);
@@ -69,23 +77,23 @@ export const AdBanner = ({ position = 'bottom', onClose }: AdBannerProps) => {
       transition={{ duration: 0.3 }}
     >
       <div className="relative w-full h-[50px] flex items-center justify-center">
-        {/* OPTION 1: Google AdSense (WEB) - Uncomment to use */}
-        {/* <GoogleAdSenseBanner onAdLoaded={() => setAdLoaded(true)} /> */}
+        {/* Real Google AdSense Banner */}
+        <GoogleAdSenseBanner
+          position={position}
+          onAdLoaded={() => setAdLoaded(true)}
+        />
 
-        {/* OPTION 2: AdMob (REACT NATIVE) - Uncomment to use */}
-        {/* <AdMobBannerAd onAdLoaded={() => setAdLoaded(true)} /> */}
-
-        {/* PLACEHOLDER - Remove when using real ads */}
+        {/* Fallback placeholder if ad doesn't load */}
         {!adLoaded && (
           <div className="text-center">
             <div className="text-xs text-white/40 uppercase tracking-wider mb-1">
               Advertisement
             </div>
             <div className="text-sm text-white/60 font-medium">
-              🎮 Your Ad Here - 320x50 Banner
+              🎮 Configure AdSense in .env
             </div>
             <div className="text-[10px] text-white/30 mt-1">
-              Remove ads with Premium Pass
+              Remove ads with Premium Pass ($3.99)
             </div>
           </div>
         )}
@@ -117,28 +125,32 @@ export const AdBanner = ({ position = 'bottom', onClose }: AdBannerProps) => {
 // GOOGLE ADSENSE COMPONENT (WEB)
 // ============================================
 interface GoogleAdSenseBannerProps {
+  position: 'top' | 'bottom';
   onAdLoaded?: () => void;
 }
 
-export const GoogleAdSenseBanner = ({ onAdLoaded }: GoogleAdSenseBannerProps) => {
+export const GoogleAdSenseBanner = ({ position, onAdLoaded }: GoogleAdSenseBannerProps) => {
+  const adConfig = getAdUnitConfig(position);
+
   useEffect(() => {
     try {
-      // @ts-ignore
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
+      // Load the ad
+      loadAd(adConfig.slot);
       onAdLoaded?.();
     } catch (error) {
       console.error('AdSense error:', error);
     }
-  }, [onAdLoaded]);
+  }, [adConfig.slot, onAdLoaded]);
 
   return (
     <ins
       className="adsbygoogle"
       style={{ display: 'block' }}
-      data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" // Replace with your publisher ID
-      data-ad-slot="XXXXXXXXXX" // Replace with your ad slot ID
-      data-ad-format="auto"
-      data-full-width-responsive="true"
+      data-ad-client={adConfig.client}
+      data-ad-slot={adConfig.slot}
+      data-ad-format={adConfig.format}
+      data-full-width-responsive={adConfig.responsive.toString()}
+      data-ad-test={adConfig.testMode ? 'on' : undefined}
     />
   );
 };
