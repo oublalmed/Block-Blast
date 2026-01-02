@@ -59,7 +59,7 @@ export const HomeScreen = ({
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(255,255,255,0.05),transparent_50%)] animate-twinkle pointer-events-none" />
 
       {/* Content */}
-      <div className="relative z-10 px-3 py-4 pb-20 sm:p-6 sm:pb-24 safe-area-padding max-w-2xl mx-auto w-full">
+      <div className="relative z-10 px-4 py-4 pb-20 sm:px-6 sm:py-6 sm:pb-24 safe-area-padding max-w-2xl mx-auto w-full">
         {/* Header */}
         <motion.div
           className="flex items-center justify-between mb-5 sm:mb-8"
