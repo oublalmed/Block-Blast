@@ -1,4 +1,5 @@
-import { loadStripe, Stripe } from '@stripe/stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
+import type { Stripe } from '@stripe/stripe-js';
 import { STRIPE_CONFIG, PREMIUM_PASS, COIN_PACKS } from '../config/payment';
 
 let stripePromise: Promise<Stripe | null> | null = null;
