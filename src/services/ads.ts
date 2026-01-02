@@ -39,9 +39,9 @@ export const initializeAdSense = () => {
 
 /**
  * Load an ad unit
- * @param slotId - The ad slot ID
+ * @param _slotId - The ad slot ID
  */
-export const loadAd = (slotId: string) => {
+export const loadAd = (_slotId: string) => {
   if (!ADSENSE_CONFIG.enabled || typeof window === 'undefined') {
     return;
   }

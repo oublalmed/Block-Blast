@@ -12,7 +12,7 @@ interface ShopScreenProps {
 }
 
 export const ShopScreen = ({ onBack }: ShopScreenProps) => {
-  const { premiumPass, activatePremiumPass, coins, spendCoins, buyPowerUp, powerUps } = useGameStore();
+  const { premiumPass, activatePremiumPass, coins, buyPowerUp, powerUps } = useGameStore();
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [selectedPowerUp, setSelectedPowerUp] = useState<PowerUpType | null>(null);
   const [quantity, setQuantity] = useState(1);

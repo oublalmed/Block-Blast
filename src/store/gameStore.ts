@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { UserProgress, DailyChallenge, PowerUpInventory } from '../types/game';
+import type { UserProgress, DailyChallenge } from '../types/game';
 import { ACHIEVEMENTS, type Achievement } from '../types/achievements';
 import type { PowerUpType } from '../types/powerups';
 

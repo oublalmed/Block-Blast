@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Trophy, Star, Menu } from 'lucide-react';
+import { Trophy, Menu } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
 
 interface HeaderProps {
@@ -9,7 +9,7 @@ interface HeaderProps {
 }
 
 export const Header = ({ score, showMenu = true, onMenuClick }: HeaderProps) => {
-  const { bestScore, coins, premiumPass } = useGameStore();
+  const { bestScore } = useGameStore();
 
   return (
     <motion.div

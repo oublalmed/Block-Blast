@@ -31,7 +31,7 @@ export const Board = ({
       const isClearing = clearingCells.has(key);
 
       // Check if this cell is part of the hint
-      const isHint = hint && x === hint.x && y === hint.y;
+      const isHint = !!(hint && x === hint.x && y === hint.y);
 
       return (
         <div

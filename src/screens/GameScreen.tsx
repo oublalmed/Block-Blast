@@ -39,7 +39,6 @@ export const GameScreen = ({
     handleUndo,
     handleShowHint,
     hint,
-    canUndo,
   } = useGame();
 
   const { addCoins, premiumPass } = useGameStore();

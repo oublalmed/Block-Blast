@@ -126,7 +126,7 @@ class SoundManager {
   // Using Web Audio API to create simple beeps
   // ========================================
 
-  private getBeepSound(frequency: number, duration: number): string {
+  private getBeepSound(_frequency: number, _duration: number): string {
     // This creates a simple beep using the Web Audio API
     // Returns a data URL that can be used as audio source
     return `data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQA=`; // Placeholder
