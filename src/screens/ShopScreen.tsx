@@ -127,7 +127,7 @@ export const ShopScreen = ({ onBack }: ShopScreenProps) => {
             <h2 className="text-white font-bold text-xl">Power-Ups</h2>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
             {POWERUPS.map((powerUp, index) => (
               <motion.button
                 key={powerUp.id}
@@ -135,14 +135,16 @@ export const ShopScreen = ({ onBack }: ShopScreenProps) => {
                 className={`
                   relative
                   bg-gradient-to-br ${powerUp.color}
-                  rounded-2xl
-                  p-4
+                  rounded-xl sm:rounded-2xl
+                  p-3.5 sm:p-4
                   text-white
                   shadow-lg
                   hover:scale-105
                   active:scale-95
                   transition-all
-                  border-2 border-white/10
+                  border-2 border-white/20
+                  backdrop-blur-sm
+                  min-h-[120px] sm:min-h-[140px]
                 `}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -152,19 +154,19 @@ export const ShopScreen = ({ onBack }: ShopScreenProps) => {
               >
                 {/* Owned Badge */}
                 {powerUps[powerUp.id] > 0 && (
-                  <div className="absolute -top-2 -right-2 bg-white text-gray-900 rounded-full w-7 h-7 flex items-center justify-center text-xs font-black shadow-md">
+                  <div className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 bg-white text-gray-900 rounded-full w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center text-[10px] sm:text-xs font-black shadow-lg ring-2 ring-white/50">
                     {powerUps[powerUp.id]}
                   </div>
                 )}
 
                 {/* Icon */}
-                <div className="text-4xl mb-2 text-center">{powerUp.icon}</div>
+                <div className="text-3xl sm:text-4xl mb-1.5 sm:mb-2 text-center">{powerUp.icon}</div>
 
                 {/* Name */}
-                <div className="text-sm font-bold text-center mb-1">{powerUp.name}</div>
+                <div className="text-xs sm:text-sm font-bold text-center mb-1.5">{powerUp.name}</div>
 
                 {/* Price */}
-                <div className="text-xs text-center font-semibold bg-black/20 rounded-lg py-1 px-2">
+                <div className="text-[10px] sm:text-xs text-center font-semibold bg-black/30 backdrop-blur-sm rounded-lg py-1 px-2">
                   💰 {powerUp.cost}
                 </div>
               </motion.button>

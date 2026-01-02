@@ -183,31 +183,31 @@ export const GameScreen = ({
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(255,255,255,0.05),transparent_50%)] animate-twinkle pointer-events-none" />
 
       {/* Main Content */}
-      <div className="relative z-10 flex flex-col items-center h-screen p-2 sm:p-4 pb-4 safe-area-padding">
+      <div className="relative z-10 flex flex-col items-center h-screen px-3 py-2 sm:p-4 safe-area-padding max-w-[600px] mx-auto w-full">
         {/* Header */}
-        <div className="w-full mb-2">
+        <div className="w-full mb-1 sm:mb-2">
           <Header score={score} onMenuClick={onHome} showMenu={!!onHome} />
         </div>
 
         {/* Level Progress (if in level mode) */}
         {levelMode && targetScore && (
           <motion.div
-            className="w-full max-w-md mt-2"
+            className="w-full mb-2"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <div className="bg-slate-800/50 rounded-xl p-3 border border-white/10">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-xs text-white/60 uppercase tracking-wider">
+            <div className="bg-gradient-to-r from-slate-800/80 to-slate-900/80 backdrop-blur-sm rounded-xl p-2.5 sm:p-3 border border-white/10 shadow-lg">
+              <div className="flex justify-between items-center mb-1.5">
+                <span className="text-[10px] sm:text-xs text-white/60 uppercase tracking-wider font-semibold">
                   Target
                 </span>
-                <span className="text-sm font-bold text-yellow-400">
+                <span className="text-xs sm:text-sm font-bold text-yellow-400">
                   {targetScore.toLocaleString()}
                 </span>
               </div>
-              <div className="w-full bg-slate-900 rounded-full h-2 overflow-hidden">
+              <div className="w-full bg-slate-900/50 rounded-full h-1.5 sm:h-2 overflow-hidden border border-white/5">
                 <motion.div
-                  className="h-full bg-gradient-to-r from-green-500 to-green-400"
+                  className="h-full bg-gradient-to-r from-green-500 via-emerald-400 to-green-500 shadow-lg shadow-green-500/20"
                   initial={{ width: 0 }}
                   animate={{ width: `${Math.min((score / targetScore) * 100, 100)}%` }}
                   transition={{ duration: 0.3 }}
@@ -218,8 +218,8 @@ export const GameScreen = ({
         )}
 
         {/* Game Board */}
-        <div className="flex-1 flex items-center justify-center w-full my-2 sm:my-4">
-          <div className="w-full aspect-square max-w-[min(90vw,420px)] sm:max-w-[min(85vw,450px)]" data-board>
+        <div className="flex-1 flex items-center justify-center w-full my-1 sm:my-2">
+          <div className="w-full aspect-square max-w-[95vw] sm:max-w-[450px]" data-board>
             <Board
               grid={grid}
               size={8}
@@ -232,7 +232,7 @@ export const GameScreen = ({
         </div>
 
         {/* Power-Ups Bar */}
-        <div className="w-full mb-3">
+        <div className="w-full mb-2 sm:mb-3">
           <PowerUpBar
             onUsePowerUp={(type: PowerUpType) => {
               if (type === 'undo') {
@@ -246,7 +246,7 @@ export const GameScreen = ({
         </div>
 
         {/* Piece Tray */}
-        <div className="w-full mt-auto">
+        <div className="w-full">
           <PieceTray
             pieces={pieces}
             onPieceDragStart={handlePieceDragStart}

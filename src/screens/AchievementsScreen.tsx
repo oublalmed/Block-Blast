@@ -127,7 +127,7 @@ export const AchievementsScreen = ({ onBack }: AchievementsScreenProps) => {
         </motion.div>
 
         {/* Category Filter */}
-        <div className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide">
+        <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-2 mb-4 sm:mb-6 scrollbar-hide -mx-1 px-1">
           <CategoryPill
             active={selectedCategory === 'all'}
             onClick={() => setSelectedCategory('all')}
@@ -146,7 +146,7 @@ export const AchievementsScreen = ({ onBack }: AchievementsScreenProps) => {
         </div>
 
         {/* Achievements List */}
-        <div className="space-y-3">
+        <div className="space-y-2.5 sm:space-y-3">
           {filteredAchievements.map((achievement, index) => (
             <AchievementCard
               key={achievement.id}
@@ -179,21 +179,22 @@ const CategoryPill = ({ active, onClick, label, icon }: CategoryPillProps) => (
   <button
     onClick={onClick}
     className={`
-      px-4 py-2
-      rounded-xl
+      px-3 sm:px-4 py-1.5 sm:py-2
+      rounded-lg sm:rounded-xl
       font-semibold
-      text-sm
+      text-xs sm:text-sm
       whitespace-nowrap
       transition-all
-      flex items-center gap-2
+      flex items-center gap-1.5 sm:gap-2
+      flex-shrink-0
       ${
         active
-          ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
-          : 'bg-slate-700/50 text-white/60 hover:text-white hover:bg-slate-600/50'
+          ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg border-2 border-white/20'
+          : 'bg-slate-700/50 text-white/60 hover:text-white hover:bg-slate-600/50 border-2 border-white/5'
       }
     `}
   >
-    <span>{icon}</span>
+    <span className="text-sm sm:text-base">{icon}</span>
     <span>{label}</span>
   </button>
 );
@@ -211,8 +212,9 @@ const AchievementCard = ({ achievement, delay }: AchievementCardProps) => {
     <motion.div
       className={`
         bg-gradient-to-br from-slate-800 to-slate-900
-        rounded-xl
-        p-4
+        backdrop-blur-sm
+        rounded-xl sm:rounded-2xl
+        p-3.5 sm:p-4
         border-2
         transition-all
         ${isLocked ? 'border-white/5 opacity-60' : 'border-white/10 shadow-lg'}
@@ -222,14 +224,14 @@ const AchievementCard = ({ achievement, delay }: AchievementCardProps) => {
       transition={{ delay }}
       whileHover={!isLocked ? { scale: 1.02 } : {}}
     >
-      <div className="flex items-start gap-4">
+      <div className="flex items-start gap-3 sm:gap-4">
         {/* Icon */}
         <div
           className={`
-            w-16 h-16
-            rounded-xl
+            w-14 h-14 sm:w-16 sm:h-16
+            rounded-lg sm:rounded-xl
             flex items-center justify-center
-            text-3xl
+            text-2xl sm:text-3xl
             ${
               isLocked
                 ? 'bg-slate-700/30'
@@ -237,31 +239,32 @@ const AchievementCard = ({ achievement, delay }: AchievementCardProps) => {
             }
             shadow-lg
             relative
+            flex-shrink-0
           `}
         >
           {isLocked && !isHidden ? (
-            <Lock className="w-8 h-8 text-white/40" />
+            <Lock className="w-7 h-7 sm:w-8 sm:h-8 text-white/40" />
           ) : isHidden ? (
-            <span className="text-2xl">❓</span>
+            <span className="text-xl sm:text-2xl">❓</span>
           ) : (
             <span>{achievement.icon}</span>
           )}
         </div>
 
         {/* Content */}
-        <div className="flex-1">
-          <h3 className={`font-bold text-lg mb-1 ${isLocked ? 'text-white/40' : 'text-white'}`}>
+        <div className="flex-1 min-w-0">
+          <h3 className={`font-bold text-base sm:text-lg mb-1 ${isLocked ? 'text-white/40' : 'text-white'}`}>
             {isHidden ? '???' : achievement.title}
           </h3>
-          <p className={`text-sm mb-2 ${isLocked ? 'text-white/30' : 'text-white/70'}`}>
+          <p className={`text-xs sm:text-sm mb-2 ${isLocked ? 'text-white/30' : 'text-white/70'}`}>
             {isHidden ? 'Hidden achievement - keep playing to unlock!' : achievement.description}
           </p>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <div
               className={`
-                px-2 py-1
-                rounded-lg
-                text-xs
+                px-2 py-0.5 sm:py-1
+                rounded-md sm:rounded-lg
+                text-[10px] sm:text-xs
                 font-semibold
                 ${
                   isLocked
@@ -273,7 +276,7 @@ const AchievementCard = ({ achievement, delay }: AchievementCardProps) => {
               {getCategoryName(achievement.category)}
             </div>
             {!isHidden && (
-              <div className="text-yellow-400 font-semibold text-sm flex items-center gap-1">
+              <div className="text-yellow-400 font-semibold text-xs sm:text-sm flex items-center gap-1">
                 💰 {achievement.rewardCoins}
               </div>
             )}
@@ -286,9 +289,9 @@ const AchievementCard = ({ achievement, delay }: AchievementCardProps) => {
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: 'spring', damping: 10 }}
-            className="text-green-400"
+            className="text-green-400 flex-shrink-0"
           >
-            <Trophy className="w-6 h-6 fill-current" />
+            <Trophy className="w-5 h-5 sm:w-6 sm:h-6 fill-current" />
           </motion.div>
         )}
       </div>

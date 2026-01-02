@@ -75,61 +75,62 @@ export const ChallengesScreen = ({ onBack, onStartChallenge }: ChallengesScreenP
         </motion.div>
 
         {/* Challenges List */}
-        <div className="space-y-3">
+        <div className="space-y-2.5 sm:space-y-3">
           {dailyChallenges.map((challenge, index) => (
             <motion.div
               key={challenge.id}
               className={`
                 relative overflow-hidden
-                bg-slate-800/50 rounded-2xl p-5
-                border border-white/10
+                bg-slate-800/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-5
+                border-2 border-white/10
                 ${!challenge.completed ? 'hover:bg-slate-700/50' : ''}
                 transition-all
+                shadow-lg
               `}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 + index * 0.1 }}
             >
               {challenge.completed && (
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 to-green-400" />
+                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-green-500 to-green-400" />
               )}
 
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-white font-bold text-lg">
+                  <div className="flex items-center gap-2 mb-1.5 sm:mb-2">
+                    <h3 className="text-white font-bold text-base sm:text-lg">
                       {challenge.name}
                     </h3>
                     {challenge.completed && (
-                      <div className="bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <div className="bg-green-500 text-white text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
                         <Check className="w-3 h-3" />
                         Done
                       </div>
                     )}
                   </div>
-                  <p className="text-white/60 text-sm mb-3">
+                  <p className="text-white/60 text-xs sm:text-sm mb-2.5 sm:mb-3">
                     {challenge.description}
                   </p>
 
                   {/* Challenge Stats */}
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1 text-sm">
-                      <Target className="w-4 h-4 text-blue-400" />
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 sm:gap-4">
+                    <div className="flex items-center gap-1 text-xs sm:text-sm">
+                      <Target className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400" />
                       <span className="text-white/80">
                         {challenge.targetScore.toLocaleString()}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1 text-sm">
-                      <Coins className="w-4 h-4 text-yellow-400" />
+                    <div className="flex items-center gap-1 text-xs sm:text-sm">
+                      <Coins className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-yellow-400" />
                       <span className="text-yellow-400 font-semibold">
                         +{challenge.reward * (premiumPass.active ? 2 : 1)}
                       </span>
                       {premiumPass.active && (
-                        <span className="text-[10px] text-yellow-300 ml-1">2x</span>
+                        <span className="text-[9px] sm:text-[10px] text-yellow-300 ml-0.5 sm:ml-1">2x</span>
                       )}
                     </div>
-                    <div className="flex items-center gap-1 text-sm">
-                      <Clock className="w-4 h-4 text-orange-400" />
+                    <div className="flex items-center gap-1 text-xs sm:text-sm">
+                      <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-400" />
                       <span className="text-white/60">
                         {getTimeRemaining(challenge.expiresAt)}
                       </span>
@@ -137,7 +138,7 @@ export const ChallengesScreen = ({ onBack, onStartChallenge }: ChallengesScreenP
                   </div>
                 </div>
 
-                <div className="text-4xl ml-4">
+                <div className="text-3xl sm:text-4xl ml-3 sm:ml-4 flex-shrink-0">
                   {challenge.completed ? '✅' : '🎯'}
                 </div>
               </div>
@@ -151,13 +152,15 @@ export const ChallengesScreen = ({ onBack, onStartChallenge }: ChallengesScreenP
                     bg-gradient-to-r from-purple-500 to-blue-500
                     text-white
                     font-bold
-                    py-3
-                    rounded-xl
+                    py-2.5 sm:py-3
+                    rounded-lg sm:rounded-xl
                     shadow-lg shadow-purple-500/30
                     hover:shadow-purple-500/50
                     hover:scale-105
                     active:scale-95
                     transition-all
+                    border-2 border-white/10
+                    text-sm sm:text-base
                   "
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -167,7 +170,7 @@ export const ChallengesScreen = ({ onBack, onStartChallenge }: ChallengesScreenP
               )}
 
               {challenge.completed && (
-                <div className="w-full bg-green-500/20 text-green-400 font-semibold py-3 rounded-xl text-center border border-green-500/30">
+                <div className="w-full bg-green-500/20 text-green-400 font-semibold py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-center border-2 border-green-500/30 text-sm sm:text-base">
                   Challenge Completed! 🎉
                 </div>
               )}

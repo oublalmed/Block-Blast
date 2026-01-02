@@ -21,32 +21,32 @@ const colorMap: Record<CellColor, string> = {
 
 export const Cell = ({ color, isPreview, isInvalidPreview, isClearing, isHint }: CellProps) => {
   const getClassName = () => {
-    let classes = 'relative w-full h-full rounded-md sm:rounded-lg transition-all duration-150 ';
+    let classes = 'relative w-full h-full rounded-lg sm:rounded-xl transition-all duration-200 ';
 
     if (isClearing) {
       return classes + 'animate-pulse';
     }
 
     if (isPreview) {
-      return classes + 'bg-white/20 shadow-inner scale-95';
+      return classes + 'bg-white/25 shadow-inner scale-95 ring-1 ring-white/30';
     }
 
     if (isHint) {
-      return classes + 'bg-yellow-400/30 ring-2 ring-yellow-400 animate-pulse shadow-lg shadow-yellow-400/50';
+      return classes + 'bg-yellow-400/40 ring-2 ring-yellow-300 animate-pulse shadow-xl shadow-yellow-400/60';
     }
 
     if (isInvalidPreview) {
-      return classes + 'bg-red-500/25 animate-shake';
+      return classes + 'bg-red-500/30 animate-shake ring-1 ring-red-400/50';
     }
 
     if (color) {
       return (
         classes +
-        `bg-gradient-to-br ${colorMap[color]} shadow-lg border-none shadow-${color}-900/30`
+        `bg-gradient-to-br ${colorMap[color]} shadow-lg border-none shadow-${color}-900/40`
       );
     }
 
-    return classes + 'bg-gradient-to-br from-slate-800 to-slate-900 border border-white/5';
+    return classes + 'bg-gradient-to-br from-slate-800/60 to-slate-900/80 border border-white/10 shadow-inner';
   };
 
   return (

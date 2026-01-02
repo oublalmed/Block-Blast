@@ -22,24 +22,28 @@ export const PieceTray = ({
   return (
     <motion.div
       className="
-        w-full max-w-md mx-auto
-        bg-gradient-to-br from-slate-800 to-slate-900
-        rounded-xl sm:rounded-2xl
-        p-2 sm:p-4
+        w-full
+        bg-gradient-to-br from-slate-800/90 to-slate-900/90
+        backdrop-blur-sm
+        rounded-2xl sm:rounded-3xl
+        p-3 sm:p-5
         shadow-2xl
-        border-2 border-white/5
+        border-2 border-white/10
         flex items-center justify-around
-        gap-2 sm:gap-4
-        min-h-[100px] sm:min-h-[120px]
+        gap-3 sm:gap-5
+        min-h-[90px] sm:min-h-[110px]
       "
       initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.2 }}
     >
-      {pieces.map((piece) => (
-        <div
+      {pieces.map((piece, index) => (
+        <motion.div
           key={piece.id}
-          className="flex-1 flex items-center justify-center min-h-[80px] sm:min-h-[100px]"
+          className="flex-1 flex items-center justify-center min-h-[70px] sm:min-h-[90px]"
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.3 + index * 0.1, type: 'spring', stiffness: 300, damping: 20 }}
         >
           {!piece.placed && (
             <Piece
@@ -51,7 +55,7 @@ export const PieceTray = ({
               position={draggingPiece?.id === piece.id ? dragPosition : undefined}
             />
           )}
-        </div>
+        </motion.div>
       ))}
     </motion.div>
   );

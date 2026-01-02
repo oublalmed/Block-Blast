@@ -56,20 +56,20 @@ export const Board = ({
     <motion.div
       className="
         relative
-        bg-gradient-to-br from-slate-800 to-slate-900
-        rounded-xl sm:rounded-2xl
-        p-1 sm:p-2
-        shadow-2xl
-        border-2 border-white/5
+        bg-gradient-to-br from-slate-800 via-slate-850 to-slate-900
+        rounded-2xl sm:rounded-3xl
+        p-2 sm:p-3
+        shadow-2xl shadow-black/50
+        border-2 border-white/10
         w-full h-full
       "
-      initial={{ opacity: 0, scale: 0.9 }}
+      initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.4, type: 'spring', stiffness: 200, damping: 20 }}
     >
-      <div className="relative bg-black/30 rounded-lg sm:rounded-xl p-0.5 sm:p-1 w-full h-full">
+      <div className="relative bg-gradient-to-br from-black/40 to-slate-900/40 backdrop-blur-sm rounded-xl sm:rounded-2xl p-1 sm:p-1.5 w-full h-full shadow-inner">
         <div
-          className="grid gap-[2px] sm:gap-1 w-full h-full"
+          className="grid gap-[3px] sm:gap-1 w-full h-full"
           style={{
             gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))`,
             gridTemplateRows: `repeat(${size}, minmax(0, 1fr))`,
@@ -81,9 +81,10 @@ export const Board = ({
         </div>
       </div>
 
-      {/* Starry background overlay */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(255,255,255,0.1),transparent_50%)] animate-twinkle" />
+      {/* Animated glow overlay */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl sm:rounded-3xl">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(59,130,246,0.1),transparent_60%)] animate-twinkle" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_60%,rgba(168,85,247,0.08),transparent_60%)] animate-twinkle" style={{ animationDelay: '1s' }} />
       </div>
     </motion.div>
   );

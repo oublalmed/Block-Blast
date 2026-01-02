@@ -13,69 +13,37 @@ export const Header = ({ score, showMenu = true, onMenuClick }: HeaderProps) => 
 
   return (
     <motion.div
-      className="w-full max-w-md flex items-center justify-between px-2"
+      className="w-full flex items-center justify-between"
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      {/* Logo */}
-      <div className="flex items-center gap-2">
-        <motion.div
-          className="
-            w-9 h-9 sm:w-10 sm:h-10
-            bg-gradient-to-br from-orange-500 to-orange-600
-            rounded-lg
-            flex items-center justify-center
-            text-xl sm:text-2xl
-            shadow-lg shadow-orange-500/40
-          "
-          whileHover={{ scale: 1.05, rotate: 5 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          🧩
-        </motion.div>
-        <div>
-          <h1 className="text-white font-bold text-lg sm:text-xl leading-none">
-            Block Blast
-          </h1>
-          {premiumPass.active && (
-            <span className="text-yellow-400 text-xs font-semibold flex items-center gap-1">
-              <Star className="w-3 h-3 fill-current" />
-              Premium
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Score Display */}
-      <div className="flex items-center gap-1 sm:gap-2">
-        {/* Coins - Hidden on very small screens */}
-        <div className="hidden xs:block">
-          <ScoreBox label="Coins" value={coins} icon="💰" variant="yellow" />
-        </div>
-
+      {/* Score Display - Mobile First */}
+      <div className="flex items-center gap-1 sm:gap-1.5">
         {/* Current Score */}
         <ScoreBox label="Score" value={score} variant="green" />
 
         {/* Best Score */}
-        <ScoreBox label="Best" value={bestScore} icon={<Trophy className="w-3 h-3" />} variant="gold" />
+        <ScoreBox label="Best" value={bestScore} icon={<Trophy className="w-3 h-3 sm:w-3.5 sm:h-3.5" />} variant="gold" />
 
         {/* Menu Button */}
         {showMenu && (
           <motion.button
             onClick={onMenuClick}
             className="
-              w-9 h-9 sm:w-10 sm:h-10
-              bg-slate-700/50
+              w-8 h-8 sm:w-9 sm:h-9
+              bg-gradient-to-br from-slate-700 to-slate-800
               rounded-lg
               flex items-center justify-center
               text-white
               border border-white/10
+              shadow-md
+              ml-1
             "
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Menu className="w-5 h-5" />
+            <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
           </motion.button>
         )}
       </div>
@@ -92,38 +60,39 @@ interface ScoreBoxProps {
 
 const ScoreBox = ({ label, value, icon, variant = 'green' }: ScoreBoxProps) => {
   const variantClasses = {
-    green: 'text-green-400 shadow-green-400/50',
-    gold: 'text-yellow-400 shadow-yellow-400/50',
-    yellow: 'text-yellow-300 shadow-yellow-300/50',
+    green: 'from-green-500/20 to-emerald-600/20 border-green-500/30 text-green-400',
+    gold: 'from-yellow-500/20 to-orange-600/20 border-yellow-500/30 text-yellow-400',
+    yellow: 'from-yellow-400/20 to-yellow-600/20 border-yellow-400/30 text-yellow-300',
   };
 
   return (
     <motion.div
-      className="
-        bg-gradient-to-br from-slate-700 to-slate-800
-        rounded-lg
-        px-2 py-1 sm:px-3 sm:py-1.5
+      className={`
+        bg-gradient-to-br ${variantClasses[variant]}
+        backdrop-blur-sm
+        rounded-xl
+        px-2.5 py-1.5 sm:px-3 sm:py-2
         text-center
-        border border-white/10
+        border
         shadow-lg
-        min-w-[50px] sm:min-w-[60px]
-      "
+        min-w-[60px] sm:min-w-[70px]
+      `}
       initial={{ scale: 0 }}
       animate={{ scale: 1 }}
       transition={{ type: 'spring', stiffness: 500, damping: 25 }}
     >
-      <div className="text-[8px] sm:text-[9px] text-white/60 uppercase tracking-wider font-semibold flex items-center justify-center gap-1">
-        {icon && <span className="text-[10px]">{icon}</span>}
-        {label}
+      <div className="text-[9px] sm:text-[10px] text-white/70 uppercase tracking-wide font-bold flex items-center justify-center gap-0.5">
+        {icon && <span className="opacity-70">{icon}</span>}
+        <span>{label}</span>
       </div>
       <motion.div
-        className={`text-sm sm:text-lg font-bold ${variantClasses[variant]} drop-shadow-lg`}
+        className={`text-base sm:text-xl font-black drop-shadow-lg`}
         key={value}
-        initial={{ scale: 1.2, y: -5 }}
+        initial={{ scale: 1.3, y: -5 }}
         animate={{ scale: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 500, damping: 15 }}
       >
-        {value.toLocaleString()}
+        {value > 9999 ? `${(value / 1000).toFixed(1)}k` : value.toLocaleString()}
       </motion.div>
     </motion.div>
   );
