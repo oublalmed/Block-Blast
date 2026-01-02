@@ -21,7 +21,7 @@ const colorMap: Record<CellColor, string> = {
 
 export const Cell = ({ color, isPreview, isInvalidPreview, isClearing, isHint }: CellProps) => {
   const getClassName = () => {
-    let classes = 'relative w-full h-full rounded-lg sm:rounded-xl transition-all duration-200 ';
+    let classes = 'relative w-full h-full rounded-md sm:rounded-lg lg:rounded-xl transition-all duration-200 ';
 
     if (isClearing) {
       return classes + 'animate-pulse';

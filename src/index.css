@@ -14,30 +14,36 @@
   user-select: none;
 }
 
-html, body, #root {
+html {
   width: 100%;
   height: 100%;
-  overflow: hidden;
-  position: fixed;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 body {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
   font-family: 'Fredoka', system-ui, -apple-system, sans-serif;
   background: linear-gradient(180deg, #1a3a5c 0%, #0d2137 50%, #061420 100%);
+  background-attachment: fixed;
   color: white;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
+  width: 100%;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
 }
 
 .app-container {
   width: 100%;
-  height: 100%;
-  overflow: hidden;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
 /* Safe area padding for mobile devices */

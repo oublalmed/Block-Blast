@@ -57,19 +57,19 @@ export const Board = ({
       className="
         relative
         bg-gradient-to-br from-slate-800 via-slate-850 to-slate-900
-        rounded-2xl sm:rounded-3xl
-        p-2 sm:p-3
+        rounded-xl sm:rounded-2xl lg:rounded-3xl
+        p-1.5 sm:p-2 lg:p-3
         shadow-2xl shadow-black/50
-        border-2 border-white/10
+        border border-white/10 sm:border-2
         w-full h-full
       "
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4, type: 'spring', stiffness: 200, damping: 20 }}
     >
-      <div className="relative bg-gradient-to-br from-black/40 to-slate-900/40 backdrop-blur-sm rounded-xl sm:rounded-2xl p-1 sm:p-1.5 w-full h-full shadow-inner">
+      <div className="relative bg-gradient-to-br from-black/40 to-slate-900/40 backdrop-blur-sm rounded-lg sm:rounded-xl lg:rounded-2xl p-0.5 sm:p-1 lg:p-1.5 w-full h-full shadow-inner">
         <div
-          className="grid gap-[3px] sm:gap-1 w-full h-full"
+          className="grid gap-[2px] sm:gap-[3px] lg:gap-1 w-full h-full"
           style={{
             gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))`,
             gridTemplateRows: `repeat(${size}, minmax(0, 1fr))`,
@@ -82,7 +82,7 @@ export const Board = ({
       </div>
 
       {/* Animated glow overlay */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl sm:rounded-3xl">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl sm:rounded-2xl lg:rounded-3xl">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(59,130,246,0.1),transparent_60%)] animate-twinkle" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_60%,rgba(168,85,247,0.08),transparent_60%)] animate-twinkle" style={{ animationDelay: '1s' }} />
       </div>

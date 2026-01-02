@@ -178,12 +178,12 @@ export const GameScreen = ({
   };
 
   return (
-    <div className="relative w-full min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
+    <div className="relative w-full h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
       {/* Starry Background */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(255,255,255,0.05),transparent_50%)] animate-twinkle pointer-events-none" />
 
       {/* Main Content */}
-      <div className="relative z-10 flex flex-col items-center h-screen px-3 py-2 sm:p-4 safe-area-padding max-w-[600px] mx-auto w-full">
+      <div className="relative z-10 flex flex-col items-center h-full px-2 py-1.5 sm:px-4 sm:py-3 safe-area-padding max-w-[600px] mx-auto w-full">
         {/* Header */}
         <div className="w-full mb-1 sm:mb-2">
           <Header score={score} onMenuClick={onHome} showMenu={!!onHome} />
@@ -192,16 +192,16 @@ export const GameScreen = ({
         {/* Level Progress (if in level mode) */}
         {levelMode && targetScore && (
           <motion.div
-            className="w-full mb-2"
+            className="w-full mb-1 sm:mb-2"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <div className="bg-gradient-to-r from-slate-800/80 to-slate-900/80 backdrop-blur-sm rounded-xl p-2.5 sm:p-3 border border-white/10 shadow-lg">
-              <div className="flex justify-between items-center mb-1.5">
-                <span className="text-[10px] sm:text-xs text-white/60 uppercase tracking-wider font-semibold">
+            <div className="bg-gradient-to-r from-slate-800/80 to-slate-900/80 backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 border border-white/10 shadow-lg">
+              <div className="flex justify-between items-center mb-1 sm:mb-1.5">
+                <span className="text-[9px] sm:text-xs text-white/60 uppercase tracking-wider font-semibold">
                   Target
                 </span>
-                <span className="text-xs sm:text-sm font-bold text-yellow-400">
+                <span className="text-[11px] sm:text-sm font-bold text-yellow-400">
                   {targetScore.toLocaleString()}
                 </span>
               </div>
@@ -218,8 +218,8 @@ export const GameScreen = ({
         )}
 
         {/* Game Board */}
-        <div className="flex-1 flex items-center justify-center w-full my-1 sm:my-2">
-          <div className="w-full aspect-square max-w-[95vw] sm:max-w-[450px]" data-board>
+        <div className="flex-1 flex items-center justify-center w-full my-0.5 sm:my-2 min-h-0">
+          <div className="w-full aspect-square max-w-[min(100vw-1rem,95vw,450px)] max-h-full" data-board>
             <Board
               grid={grid}
               size={8}
@@ -232,7 +232,7 @@ export const GameScreen = ({
         </div>
 
         {/* Power-Ups Bar */}
-        <div className="w-full mb-2 sm:mb-3">
+        <div className="w-full mb-1.5 sm:mb-3">
           <PowerUpBar
             onUsePowerUp={(type: PowerUpType) => {
               if (type === 'undo') {
@@ -246,7 +246,7 @@ export const GameScreen = ({
         </div>
 
         {/* Piece Tray */}
-        <div className="w-full">
+        <div className="w-full pb-1">
           <PieceTray
             pieces={pieces}
             onPieceDragStart={handlePieceDragStart}

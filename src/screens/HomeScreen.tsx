@@ -54,26 +54,26 @@ export const HomeScreen = ({
   };
 
   return (
-    <div className="relative w-full min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 overflow-x-hidden overflow-y-auto">
+    <div className="relative w-full min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
       {/* Starry Background */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(255,255,255,0.05),transparent_50%)] animate-twinkle pointer-events-none" />
 
       {/* Content */}
-      <div className="relative z-10 p-4 pb-20 safe-area-padding max-w-2xl mx-auto">
+      <div className="relative z-10 px-3 py-4 pb-20 sm:p-6 sm:pb-24 safe-area-padding max-w-2xl mx-auto w-full">
         {/* Header */}
         <motion.div
-          className="flex items-center justify-between mb-8 mt-4"
+          className="flex items-center justify-between mb-5 sm:mb-8"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <motion.div
               className="
-                w-14 h-14
+                w-10 h-10 sm:w-14 sm:h-14
                 bg-gradient-to-br from-orange-500 to-orange-600
-                rounded-2xl
+                rounded-xl sm:rounded-2xl
                 flex items-center justify-center
-                text-3xl
+                text-2xl sm:text-3xl
                 shadow-2xl shadow-orange-500/40
               "
               whileHover={{ scale: 1.05, rotate: 5 }}
@@ -81,25 +81,25 @@ export const HomeScreen = ({
               🧩
             </motion.div>
             <div>
-              <h1 className="text-white font-black text-3xl leading-none tracking-tight">
+              <h1 className="text-white font-black text-xl sm:text-3xl leading-none tracking-tight">
                 Block Blast
               </h1>
               {premiumPass.active && (
-                <div className="flex items-center gap-1 mt-1">
-                  <Crown className="w-4 h-4 text-yellow-400 fill-current" />
-                  <span className="text-yellow-400 text-sm font-semibold">Premium</span>
+                <div className="flex items-center gap-1 mt-0.5 sm:mt-1">
+                  <Crown className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-400 fill-current" />
+                  <span className="text-yellow-400 text-xs sm:text-sm font-semibold">Premium</span>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <button
               onClick={resetTutorial}
               className="
-                w-10 h-10
+                w-9 h-9 sm:w-10 sm:h-10
                 bg-slate-700/50
-                rounded-xl
+                rounded-lg sm:rounded-xl
                 flex items-center justify-center
                 text-white/70
                 hover:text-white
@@ -110,7 +110,7 @@ export const HomeScreen = ({
               aria-label="How to play"
               title="How to Play"
             >
-              <HelpCircle className="w-5 h-5" />
+              <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
             <button
               onClick={onOpenShop}
@@ -118,17 +118,18 @@ export const HomeScreen = ({
                 bg-gradient-to-br from-yellow-500 to-orange-500
                 text-white
                 font-bold
-                px-4 py-2
-                rounded-xl
+                px-3 py-1.5 sm:px-4 sm:py-2
+                rounded-lg sm:rounded-xl
+                text-sm sm:text-base
                 shadow-lg shadow-yellow-500/30
                 hover:shadow-yellow-500/50
                 hover:scale-105
                 active:scale-95
                 transition-all
-                flex items-center gap-2
+                flex items-center gap-1.5 sm:gap-2
               "
             >
-              <ShoppingBag className="w-5 h-5" />
+              <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
               <span>💰 {coins}</span>
             </button>
           </div>
@@ -136,25 +137,25 @@ export const HomeScreen = ({
 
         {/* Stats Cards */}
         <motion.div
-          className="grid grid-cols-3 gap-4 mb-7"
+          className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-7"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
           <StatCard
-            icon={<Trophy className="w-5 h-5" />}
+            icon={<Trophy className="w-4 h-4 sm:w-5 sm:h-5" />}
             label="Best Score"
             value={bestScore.toLocaleString()}
             color="yellow"
           />
           <StatCard
-            icon={<Star className="w-5 h-5" />}
+            icon={<Star className="w-4 h-4 sm:w-5 sm:h-5" />}
             label="Levels"
             value={completedLevels.length}
             color="green"
           />
           <StatCard
-            icon={<Target className="w-5 h-5" />}
+            icon={<Target className="w-4 h-4 sm:w-5 sm:h-5" />}
             label="Challenges"
             value={`${completedChallenges}/${dailyChallenges.length}`}
             color="blue"
@@ -169,17 +170,17 @@ export const HomeScreen = ({
             bg-gradient-to-r from-green-500 to-green-600
             text-white
             font-black
-            text-xl
-            py-5
-            px-8
-            rounded-2xl
+            text-lg sm:text-xl
+            py-4 sm:py-5
+            px-6 sm:px-8
+            rounded-xl sm:rounded-2xl
             shadow-2xl shadow-green-500/40
             hover:shadow-green-500/60
             hover:scale-105
             active:scale-95
             transition-all
-            flex items-center justify-center gap-3
-            mb-7
+            flex items-center justify-center gap-2 sm:gap-3
+            mb-4 sm:mb-7
             relative
             overflow-hidden
           "
@@ -230,15 +231,15 @@ export const HomeScreen = ({
             bg-gradient-to-br from-yellow-600 to-orange-600
             text-white
             font-bold
-            py-4
-            px-6
-            rounded-2xl
+            py-3 sm:py-4
+            px-4 sm:px-6
+            rounded-xl sm:rounded-2xl
             shadow-lg shadow-yellow-500/20
             hover:shadow-yellow-500/40
             hover:scale-105
             active:scale-95
             transition-all
-            mb-7
+            mb-4 sm:mb-7
             flex items-center justify-between
           "
           initial={{ opacity: 0, scale: 0.9 }}
@@ -247,11 +248,11 @@ export const HomeScreen = ({
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          <div className="flex items-center gap-3">
-            <Award className="w-6 h-6" />
-            <span className="text-lg">Achievements</span>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Award className="w-5 h-5 sm:w-6 sm:h-6" />
+            <span className="text-base sm:text-lg">Achievements</span>
           </div>
-          <Trophy className="w-5 h-5" />
+          <Trophy className="w-4 h-4 sm:w-5 sm:h-5" />
         </motion.button>
 
         {/* Daily Challenges */}
@@ -263,15 +264,15 @@ export const HomeScreen = ({
               bg-gradient-to-br from-purple-600 to-blue-600
               text-white
               font-bold
-              py-4
-              px-6
-              rounded-2xl
+              py-3 sm:py-4
+              px-4 sm:px-6
+              rounded-xl sm:rounded-2xl
               shadow-lg shadow-purple-500/30
               hover:shadow-purple-500/50
               hover:scale-105
               active:scale-95
               transition-all
-              mb-7
+              mb-4 sm:mb-7
               relative
               overflow-hidden
             "
@@ -281,16 +282,16 @@ export const HomeScreen = ({
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer" />
             <div className="relative flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Target className="w-6 h-6" />
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Target className="w-5 h-5 sm:w-6 sm:h-6" />
                 <div className="text-left">
-                  <div className="font-black text-lg">Daily Challenges</div>
-                  <div className="text-sm text-white/90">
+                  <div className="font-black text-base sm:text-lg">Daily Challenges</div>
+                  <div className="text-xs sm:text-sm text-white/90">
                     {completedChallenges}/{dailyChallenges.length} completed
                   </div>
                 </div>
               </div>
-              <div className="text-2xl">🎯</div>
+              <div className="text-xl sm:text-2xl">🎯</div>
             </div>
           </motion.button>
         )}
@@ -301,17 +302,17 @@ export const HomeScreen = ({
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
         >
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-white font-bold text-xl flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-yellow-400" />
+          <div className="flex items-center justify-between mb-3 sm:mb-5">
+            <h2 className="text-white font-bold text-lg sm:text-xl flex items-center gap-2">
+              <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
               Levels
             </h2>
-            <div className="text-white/70 text-sm font-semibold">
+            <div className="text-white/70 text-xs sm:text-sm font-semibold">
               {currentLevel} - {currentLevel + levelsToShow - 1}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4 mb-3 sm:mb-4">
             {levels.map((level, index) => (
               <LevelCard
                 key={level.id}
@@ -399,12 +400,12 @@ export const HomeScreen = ({
 // Helper Components
 const StatCard = ({ icon, label, value }: any) => {
   return (
-    <div className="bg-slate-800/50 rounded-xl p-3 border border-white/10">
-      <div className={`text-white mb-2 flex justify-center`}>{icon}</div>
-      <div className="text-[10px] text-white/70 uppercase tracking-wider text-center mb-1">
+    <div className="bg-slate-800/50 rounded-lg sm:rounded-xl p-2 sm:p-3 border border-white/10">
+      <div className={`text-white mb-1 sm:mb-2 flex justify-center`}>{icon}</div>
+      <div className="text-[9px] sm:text-[10px] text-white/70 uppercase tracking-wider text-center mb-0.5 sm:mb-1">
         {label}
       </div>
-      <div className="text-lg font-bold text-white text-center">{value}</div>
+      <div className="text-sm sm:text-lg font-bold text-white text-center">{value}</div>
     </div>
   );
 };
@@ -424,8 +425,8 @@ const LevelCard = ({ level, onClick, delay }: any) => {
       className={`
         relative
         bg-slate-800/50
-        rounded-xl
-        p-4
+        rounded-lg sm:rounded-xl
+        p-3 sm:p-4
         border border-white/10
         ${level.unlocked ? 'hover:bg-slate-700/50 hover:scale-105' : 'opacity-50'}
         active:scale-95
@@ -439,24 +440,24 @@ const LevelCard = ({ level, onClick, delay }: any) => {
     >
       {!level.unlocked && (
         <div className="absolute inset-0 flex items-center justify-center">
-          <Lock className="w-8 h-8 text-white/40" />
+          <Lock className="w-6 h-6 sm:w-8 sm:h-8 text-white/40" />
         </div>
       )}
 
       <div className={level.unlocked ? '' : 'opacity-30'}>
-        <div className="text-white font-bold text-lg mb-1">Level {level.id}</div>
-        <div className={`text-xs font-semibold bg-gradient-to-r ${difficultyColors[level.difficulty] || 'from-green-500 to-green-600'} bg-clip-text text-transparent mb-2`}>
+        <div className="text-white font-bold text-base sm:text-lg mb-0.5 sm:mb-1">Level {level.id}</div>
+        <div className={`text-[10px] sm:text-xs font-semibold bg-gradient-to-r ${difficultyColors[level.difficulty] || 'from-green-500 to-green-600'} bg-clip-text text-transparent mb-1 sm:mb-2`}>
           {level.difficulty.toUpperCase()}
         </div>
-        <div className="text-xs text-white/70 mb-2">
+        <div className="text-[10px] sm:text-xs text-white/70 mb-1 sm:mb-2">
           Target: {level.targetScore.toLocaleString()}
         </div>
         {level.completed && (
-          <div className="flex justify-center gap-1">
+          <div className="flex justify-center gap-0.5 sm:gap-1">
             {Array.from({ length: 3 }, (_, i) => (
               <Star
                 key={i}
-                className={`w-4 h-4 ${
+                className={`w-3 h-3 sm:w-4 sm:h-4 ${
                   i < level.stars ? 'text-yellow-400 fill-current' : 'text-white/20'
                 }`}
               />
@@ -464,7 +465,7 @@ const LevelCard = ({ level, onClick, delay }: any) => {
           </div>
         )}
         {!level.completed && level.unlocked && (
-          <div className="text-yellow-400 text-xs font-semibold">
+          <div className="text-yellow-400 text-[10px] sm:text-xs font-semibold">
             💰 +{level.reward}
           </div>
         )}

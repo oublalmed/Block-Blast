@@ -25,13 +25,13 @@ export const PieceTray = ({
         w-full
         bg-gradient-to-br from-slate-800/90 to-slate-900/90
         backdrop-blur-sm
-        rounded-2xl sm:rounded-3xl
-        p-3 sm:p-5
+        rounded-xl sm:rounded-2xl lg:rounded-3xl
+        p-2 sm:p-3 lg:p-5
         shadow-2xl
-        border-2 border-white/10
+        border border-white/10 sm:border-2
         flex items-center justify-around
-        gap-3 sm:gap-5
-        min-h-[90px] sm:min-h-[110px]
+        gap-2 sm:gap-3 lg:gap-5
+        min-h-[80px] sm:min-h-[90px] lg:min-h-[110px]
       "
       initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
@@ -40,7 +40,7 @@ export const PieceTray = ({
       {pieces.map((piece, index) => (
         <motion.div
           key={piece.id}
-          className="flex-1 flex items-center justify-center min-h-[70px] sm:min-h-[90px]"
+          className="flex-1 flex items-center justify-center min-h-[60px] sm:min-h-[70px] lg:min-h-[90px]"
           initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.3 + index * 0.1, type: 'spring', stiffness: 300, damping: 20 }}
