@@ -7,6 +7,12 @@ let stripePromise: Promise<Stripe | null> | null = null;
  * Initialize Stripe
  */
 export const getStripe = (): Promise<Stripe | null> => {
+  // Don't initialize with placeholder values
+  if (!STRIPE_CONFIG.publishableKey || STRIPE_CONFIG.publishableKey.includes('YOUR_KEY_HERE')) {
+    console.log('Stripe not configured - payments disabled. See GUIDE_RAPIDE_FR.md to configure.');
+    return Promise.resolve(null);
+  }
+
   if (!stripePromise) {
     stripePromise = loadStripe(STRIPE_CONFIG.publishableKey);
   }
@@ -19,6 +25,13 @@ export const getStripe = (): Promise<Stripe | null> => {
  */
 export const createPremiumCheckoutSession = async (): Promise<string | null> => {
   try {
+    // Check if Stripe is configured
+    if (!STRIPE_CONFIG.publishableKey || STRIPE_CONFIG.publishableKey.includes('YOUR_KEY_HERE')) {
+      console.error('Stripe not configured. Please set up your Stripe keys in .env file.');
+      alert('⚠️ Payment system not configured yet. Please contact support or see GUIDE_RAPIDE_FR.md to set up payments.');
+      return null;
+    }
+
     // In production, you would call your backend API to create a checkout session
     // For now, we'll use Stripe's Payment Links feature (create in Stripe Dashboard)
 
@@ -26,6 +39,13 @@ export const createPremiumCheckoutSession = async (): Promise<string | null> => 
     // Create a Payment Link in your Stripe Dashboard for the Premium Pass
     // Replace this URL with your actual Payment Link
     const paymentLinkUrl = `https://buy.stripe.com/test_YOUR_PAYMENT_LINK_ID`;
+
+    // Check if payment link is configured
+    if (paymentLinkUrl.includes('YOUR_PAYMENT_LINK_ID')) {
+      console.error('Payment link not configured. Please create a Stripe Payment Link.');
+      alert('⚠️ Payment link not configured. See GUIDE_RAPIDE_FR.md to create your Stripe Payment Link.');
+      return null;
+    }
 
     // Option 2: Call your backend to create a checkout session
     // const response = await fetch('/api/create-checkout-session', {

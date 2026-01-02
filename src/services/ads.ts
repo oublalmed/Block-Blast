@@ -6,6 +6,13 @@ import { ADSENSE_CONFIG } from '../config/payment';
  */
 export const initializeAdSense = () => {
   if (!ADSENSE_CONFIG.enabled || typeof window === 'undefined') {
+    console.log('AdSense not enabled - skipping initialization');
+    return;
+  }
+
+  // Don't initialize with placeholder values
+  if (ADSENSE_CONFIG.clientId.includes('YOUR_CLIENT_ID')) {
+    console.log('AdSense not configured - skipping initialization. See GUIDE_RAPIDE_FR.md to configure.');
     return;
   }
 
@@ -27,7 +34,7 @@ export const initializeAdSense = () => {
 
   document.head.appendChild(script);
 
-  console.log('AdSense initialized:', ADSENSE_CONFIG.clientId);
+  console.log('✅ AdSense initialized:', ADSENSE_CONFIG.clientId);
 };
 
 /**
@@ -99,6 +106,12 @@ export const initializeAnalytics = (measurementId: string) => {
     return;
   }
 
+  // Don't initialize with placeholder values
+  if (!measurementId || measurementId.includes('YOUR_MEASUREMENT_ID')) {
+    console.log('Google Analytics not configured - skipping initialization. See GUIDE_RAPIDE_FR.md to configure.');
+    return;
+  }
+
   // Load Google Analytics 4
   const script = document.createElement('script');
   script.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`;
@@ -117,5 +130,5 @@ export const initializeAnalytics = (measurementId: string) => {
     send_page_view: true,
   });
 
-  console.log('Google Analytics initialized:', measurementId);
+  console.log('✅ Google Analytics initialized:', measurementId);
 };
