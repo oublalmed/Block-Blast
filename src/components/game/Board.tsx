@@ -10,6 +10,7 @@ interface BoardProps {
   invalidPreviewCells?: Set<string>;
   clearingCells?: Set<string>;
   onCellHover?: (x: number, y: number) => void;
+  hint?: { x: number; y: number; pieceId: string } | null;
 }
 
 export const Board = ({
@@ -19,6 +20,7 @@ export const Board = ({
   invalidPreviewCells = new Set(),
   clearingCells = new Set(),
   onCellHover,
+  hint,
 }: BoardProps) => {
   const getCellElement = useCallback(
     (x: number, y: number) => {
@@ -27,6 +29,9 @@ export const Board = ({
       const isPreview = previewCells.has(key);
       const isInvalidPreview = invalidPreviewCells.has(key);
       const isClearing = clearingCells.has(key);
+
+      // Check if this cell is part of the hint
+      const isHint = hint && x === hint.x && y === hint.y;
 
       return (
         <div
@@ -39,11 +44,12 @@ export const Board = ({
             isPreview={isPreview}
             isInvalidPreview={isInvalidPreview}
             isClearing={isClearing}
+            isHint={isHint}
           />
         </div>
       );
     },
-    [grid, previewCells, invalidPreviewCells, clearingCells, onCellHover]
+    [grid, previewCells, invalidPreviewCells, clearingCells, onCellHover, hint]
   );
 
   return (

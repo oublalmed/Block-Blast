@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Board } from '../components/game/Board';
 import { PieceTray } from '../components/game/PieceTray';
+import { PowerUpBar } from '../components/game/PowerUpBar';
 import { Header } from '../components/ui/Header';
 import { GameOverModal } from '../components/ui/GameOverModal';
 import { ComboPopup } from '../components/ui/ComboPopup';
@@ -10,6 +11,7 @@ import { AdBanner } from '../components/ads/AdBanner';
 import { useGame } from '../hooks/useGame';
 import { useGameStore } from '../store/gameStore';
 import type { Piece } from '../types/game';
+import type { PowerUpType } from '../types/powerups';
 
 interface GameScreenProps {
   onHome?: () => void;
@@ -34,6 +36,10 @@ export const GameScreen = ({
     resetGame,
     checkPieceCanBePlaced,
     canPlacePiece,
+    handleUndo,
+    handleShowHint,
+    hint,
+    canUndo,
   } = useGame();
 
   const { addCoins, premiumPass } = useGameStore();
@@ -220,8 +226,23 @@ export const GameScreen = ({
               previewCells={previewCells}
               invalidPreviewCells={invalidPreviewCells}
               clearingCells={clearingCells}
+              hint={hint}
             />
           </div>
+        </div>
+
+        {/* Power-Ups Bar */}
+        <div className="w-full mb-3">
+          <PowerUpBar
+            onUsePowerUp={(type: PowerUpType) => {
+              if (type === 'undo') {
+                handleUndo();
+              } else if (type === 'hint') {
+                handleShowHint();
+              }
+            }}
+            disabled={isGameOver}
+          />
         </div>
 
         {/* Piece Tray */}

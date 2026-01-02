@@ -6,6 +6,7 @@ interface CellProps {
   isPreview?: boolean;
   isInvalidPreview?: boolean;
   isClearing?: boolean;
+  isHint?: boolean;
 }
 
 const colorMap: Record<CellColor, string> = {
@@ -18,7 +19,7 @@ const colorMap: Record<CellColor, string> = {
   red: 'from-red-400 to-red-600',
 };
 
-export const Cell = ({ color, isPreview, isInvalidPreview, isClearing }: CellProps) => {
+export const Cell = ({ color, isPreview, isInvalidPreview, isClearing, isHint }: CellProps) => {
   const getClassName = () => {
     let classes = 'relative w-full h-full rounded-md sm:rounded-lg transition-all duration-150 ';
 
@@ -28,6 +29,10 @@ export const Cell = ({ color, isPreview, isInvalidPreview, isClearing }: CellPro
 
     if (isPreview) {
       return classes + 'bg-white/20 shadow-inner scale-95';
+    }
+
+    if (isHint) {
+      return classes + 'bg-yellow-400/30 ring-2 ring-yellow-400 animate-pulse shadow-lg shadow-yellow-400/50';
     }
 
     if (isInvalidPreview) {
