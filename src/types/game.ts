@@ -56,6 +56,13 @@ export interface PremiumPass {
   };
 }
 
+export interface PowerUpInventory {
+  undo: number;
+  hint: number;
+  bomb: number;
+  shuffle: number;
+}
+
 export interface UserProgress {
   totalScore: number;
   bestScore: number;
@@ -70,6 +77,7 @@ export interface UserProgress {
   maxCombo: number; // Highest combo achieved
   perfectClears: number; // Number of perfect board clears
   consecutiveDays: number; // Days played in a row
+  powerUps: PowerUpInventory; // Power-up inventory
 }
 
 export const PIECE_SHAPES: PieceShape[] = [

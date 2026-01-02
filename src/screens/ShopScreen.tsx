@@ -1,15 +1,19 @@
 import { motion } from 'framer-motion';
-import { ArrowLeft, Crown, Check, Zap, Gift, Star, X } from 'lucide-react';
+import { ArrowLeft, Crown, Check, Zap, Gift, Star, X, ShoppingCart } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
 import { useState } from 'react';
+import { POWERUPS } from '../types/powerups';
+import type { PowerUpType } from '../types/powerups';
 
 interface ShopScreenProps {
   onBack: () => void;
 }
 
 export const ShopScreen = ({ onBack }: ShopScreenProps) => {
-  const { premiumPass, activatePremiumPass, coins, spendCoins } = useGameStore();
+  const { premiumPass, activatePremiumPass, coins, spendCoins, buyPowerUp, powerUps } = useGameStore();
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [selectedPowerUp, setSelectedPowerUp] = useState<PowerUpType | null>(null);
+  const [quantity, setQuantity] = useState(1);
 
   const handlePurchasePremium = () => {
     // In production, integrate with actual payment system
@@ -18,6 +22,16 @@ export const ShopScreen = ({ onBack }: ShopScreenProps) => {
     if (success) {
       activatePremiumPass();
       setShowPurchaseModal(false);
+    } else {
+      alert('Not enough coins! Play more to earn coins.');
+    }
+  };
+
+  const handleBuyPowerUp = (type: PowerUpType, cost: number) => {
+    const success = buyPowerUp(type, quantity, cost);
+    if (success) {
+      setSelectedPowerUp(null);
+      setQuantity(1);
     } else {
       alert('Not enough coins! Play more to earn coins.');
     }
@@ -98,6 +112,63 @@ export const ShopScreen = ({ onBack }: ShopScreenProps) => {
               </div>
             </div>
             <div className="text-5xl">💎</div>
+          </div>
+        </motion.div>
+
+        {/* Power-Ups */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.15 }}
+          className="mb-6"
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <ShoppingCart className="w-5 h-5 text-purple-400" />
+            <h2 className="text-white font-bold text-xl">Power-Ups</h2>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {POWERUPS.map((powerUp, index) => (
+              <motion.button
+                key={powerUp.id}
+                onClick={() => setSelectedPowerUp(powerUp.id)}
+                className={`
+                  relative
+                  bg-gradient-to-br ${powerUp.color}
+                  rounded-2xl
+                  p-4
+                  text-white
+                  shadow-lg
+                  hover:scale-105
+                  active:scale-95
+                  transition-all
+                  border-2 border-white/10
+                `}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 + index * 0.05 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {/* Owned Badge */}
+                {powerUps[powerUp.id] > 0 && (
+                  <div className="absolute -top-2 -right-2 bg-white text-gray-900 rounded-full w-7 h-7 flex items-center justify-center text-xs font-black shadow-md">
+                    {powerUps[powerUp.id]}
+                  </div>
+                )}
+
+                {/* Icon */}
+                <div className="text-4xl mb-2 text-center">{powerUp.icon}</div>
+
+                {/* Name */}
+                <div className="text-sm font-bold text-center mb-1">{powerUp.name}</div>
+
+                {/* Price */}
+                <div className="text-xs text-center font-semibold bg-black/20 rounded-lg py-1 px-2">
+                  💰 {powerUp.cost}
+                </div>
+              </motion.button>
+            ))}
           </div>
         </motion.div>
 
@@ -222,7 +293,102 @@ export const ShopScreen = ({ onBack }: ShopScreenProps) => {
         </motion.div>
       </div>
 
-      {/* Purchase Confirmation Modal */}
+      {/* Power-Up Purchase Modal */}
+      {selectedPowerUp && (
+        <motion.div
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          onClick={() => {
+            setSelectedPowerUp(null);
+            setQuantity(1);
+          }}
+        >
+          <motion.div
+            className="bg-slate-800 rounded-3xl p-6 max-w-sm w-full"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {(() => {
+              const powerUp = POWERUPS.find((p) => p.id === selectedPowerUp);
+              if (!powerUp) return null;
+
+              const totalCost = powerUp.cost * quantity;
+              const canAfford = coins >= totalCost;
+
+              return (
+                <>
+                  <div className="text-center mb-6">
+                    <div className="text-6xl mb-4">{powerUp.icon}</div>
+                    <h3 className="text-white font-bold text-2xl mb-2">{powerUp.name}</h3>
+                    <p className="text-white/60 text-sm mb-4">{powerUp.description}</p>
+
+                    {/* Quantity Selector */}
+                    <div className="flex items-center justify-center gap-4 mb-4">
+                      <button
+                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                        className="w-10 h-10 bg-slate-700 rounded-xl text-white font-bold hover:bg-slate-600 active:scale-95 transition-all"
+                      >
+                        −
+                      </button>
+                      <div className="text-white font-bold text-2xl w-12 text-center">
+                        {quantity}
+                      </div>
+                      <button
+                        onClick={() => setQuantity(Math.min(99, quantity + 1))}
+                        className="w-10 h-10 bg-slate-700 rounded-xl text-white font-bold hover:bg-slate-600 active:scale-95 transition-all"
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    {/* Total Cost */}
+                    <div className={`text-xl font-bold ${canAfford ? 'text-yellow-400' : 'text-red-400'}`}>
+                      💰 {totalCost.toLocaleString()} coins
+                    </div>
+                    {!canAfford && (
+                      <div className="text-red-400 text-sm mt-2">
+                        Not enough coins!
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => {
+                        setSelectedPowerUp(null);
+                        setQuantity(1);
+                      }}
+                      className="flex-1 bg-slate-700 text-white font-semibold py-3 rounded-xl hover:bg-slate-600 active:scale-95 transition-all"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => handleBuyPowerUp(powerUp.id, powerUp.cost)}
+                      disabled={!canAfford}
+                      className={`
+                        flex-1
+                        bg-gradient-to-r ${powerUp.color}
+                        text-white
+                        font-bold
+                        py-3
+                        rounded-xl
+                        transition-all
+                        ${canAfford ? 'hover:scale-105 active:scale-95' : 'opacity-50 cursor-not-allowed'}
+                      `}
+                    >
+                      Buy Now
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Premium Purchase Confirmation Modal */}
       {showPurchaseModal && (
         <motion.div
           className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"

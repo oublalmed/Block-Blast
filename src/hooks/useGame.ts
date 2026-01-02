@@ -11,6 +11,14 @@ import {
 } from '../utils/gameLogic';
 import { useGameStore } from '../store/gameStore';
 
+interface GameState {
+  grid: (CellColor | null)[][];
+  pieces: Piece[];
+  score: number;
+  combo: number;
+  moves: number;
+}
+
 export const useGame = (gridSize: number = 8) => {
   const [grid, setGrid] = useState<(CellColor | null)[][]>(() => createEmptyGrid(gridSize));
   const [pieces, setPieces] = useState<Piece[]>([]);
@@ -18,8 +26,10 @@ export const useGame = (gridSize: number = 8) => {
   const [combo, setCombo] = useState(0);
   const [isGameOver, setIsGameOver] = useState(false);
   const [moves, setMoves] = useState(0);
+  const [history, setHistory] = useState<GameState[]>([]);
+  const [hint, setHint] = useState<{ x: number; y: number; pieceId: string } | null>(null);
 
-  const { premiumPass, updateScore, incrementGamesPlayed, updateMaxCombo, incrementPerfectClears } = useGameStore();
+  const { premiumPass, updateScore, incrementGamesPlayed, updateMaxCombo, incrementPerfectClears, usePowerUp } = useGameStore();
 
   useEffect(() => {
     initGame();
@@ -32,6 +42,8 @@ export const useGame = (gridSize: number = 8) => {
     setCombo(0);
     setIsGameOver(false);
     setMoves(0);
+    setHistory([]);
+    setHint(null);
     vibrate(50);
   }, [gridSize, premiumPass.benefits.exclusivePieces]);
 
@@ -41,6 +53,19 @@ export const useGame = (gridSize: number = 8) => {
         vibrate(20);
         return false;
       }
+
+      // Save current state to history (for undo)
+      setHistory((prev) => [
+        ...prev,
+        {
+          grid: grid.map((row) => [...row]),
+          pieces: pieces.map((p) => ({ ...p })),
+          score,
+          combo,
+          moves,
+        },
+      ]);
+      setHint(null); // Clear hint after placing a piece
 
       // Place the piece
       const newGrid = grid.map((row) => [...row]);
@@ -150,6 +175,50 @@ export const useGame = (gridSize: number = 8) => {
     initGame();
   }, [initGame]);
 
+  const handleUndo = useCallback(() => {
+    if (history.length === 0) return false;
+
+    const canUse = usePowerUp('undo');
+    if (!canUse) return false;
+
+    const lastState = history[history.length - 1];
+    setGrid(lastState.grid.map((row) => [...row]));
+    setPieces(lastState.pieces.map((p) => ({ ...p })));
+    setScore(lastState.score);
+    setCombo(lastState.combo);
+    setMoves(lastState.moves);
+    setHistory((prev) => prev.slice(0, -1));
+    setHint(null);
+    vibrate(30);
+    return true;
+  }, [history, usePowerUp]);
+
+  const handleShowHint = useCallback(() => {
+    const canUse = usePowerUp('hint');
+    if (!canUse) return false;
+
+    // Find the best placement for any available piece
+    const availablePieces = pieces.filter((p) => !p.placed);
+    if (availablePieces.length === 0) return false;
+
+    // Try to find a valid placement
+    for (const piece of availablePieces) {
+      for (let y = 0; y < gridSize; y++) {
+        for (let x = 0; x < gridSize; x++) {
+          if (canPlacePiece(grid, piece.shape, x, y, gridSize)) {
+            setHint({ x, y, pieceId: piece.id });
+            vibrate(30);
+            // Clear hint after 3 seconds
+            setTimeout(() => setHint(null), 3000);
+            return true;
+          }
+        }
+      }
+    }
+
+    return false;
+  }, [pieces, grid, gridSize, usePowerUp]);
+
   return {
     grid,
     pieces,
@@ -162,5 +231,9 @@ export const useGame = (gridSize: number = 8) => {
     resetGame,
     canPlacePiece: (piece: Piece, x: number, y: number) =>
       canPlacePiece(grid, piece.shape, x, y, gridSize),
+    handleUndo,
+    handleShowHint,
+    hint,
+    canUndo: history.length > 0,
   };
 };

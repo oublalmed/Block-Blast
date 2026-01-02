@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { UserProgress, DailyChallenge } from '../types/game';
+import type { UserProgress, DailyChallenge, PowerUpInventory } from '../types/game';
 import { ACHIEVEMENTS, type Achievement } from '../types/achievements';
+import type { PowerUpType } from '../types/powerups';
 
 interface GameStore extends UserProgress {
   // Actions
@@ -23,6 +24,10 @@ interface GameStore extends UserProgress {
   getAchievements: () => Achievement[];
   updateMaxCombo: (combo: number) => void;
   incrementPerfectClears: () => void;
+  // Power-ups
+  buyPowerUp: (type: PowerUpType, quantity: number, cost: number) => boolean;
+  usePowerUp: (type: PowerUpType) => boolean;
+  addPowerUp: (type: PowerUpType, quantity: number) => void;
 }
 
 const generateDailyChallenges = (): DailyChallenge[] => {
@@ -89,6 +94,12 @@ const initialState: UserProgress = {
   maxCombo: 0,
   perfectClears: 0,
   consecutiveDays: 1,
+  powerUps: {
+    undo: 3, // Start with 3 free undos
+    hint: 3, // Start with 3 free hints
+    bomb: 0,
+    shuffle: 0,
+  },
 };
 
 export const useGameStore = create<GameStore>()(
@@ -315,6 +326,48 @@ export const useGameStore = create<GameStore>()(
 
       incrementPerfectClears: () => {
         set((state) => ({ perfectClears: state.perfectClears + 1 }));
+      },
+
+      // Power-up methods
+      buyPowerUp: (type: PowerUpType, quantity: number, cost: number) => {
+        const state = get();
+        const totalCost = cost * quantity;
+
+        if (state.coins >= totalCost) {
+          set({
+            coins: state.coins - totalCost,
+            powerUps: {
+              ...state.powerUps,
+              [type]: state.powerUps[type] + quantity,
+            },
+          });
+          return true;
+        }
+        return false;
+      },
+
+      usePowerUp: (type: PowerUpType) => {
+        const state = get();
+        if (state.powerUps[type] > 0) {
+          set({
+            powerUps: {
+              ...state.powerUps,
+              [type]: state.powerUps[type] - 1,
+            },
+          });
+          return true;
+        }
+        return false;
+      },
+
+      addPowerUp: (type: PowerUpType, quantity: number) => {
+        const state = get();
+        set({
+          powerUps: {
+            ...state.powerUps,
+            [type]: state.powerUps[type] + quantity,
+          },
+        });
       },
     }),
     {
