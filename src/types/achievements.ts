@@ -192,7 +192,7 @@ export const ACHIEVEMENTS: Omit<Achievement, 'unlocked' | 'unlockedAt'>[] = [
   {
     id: 'premium_user',
     title: 'Premium Member',
-    description: 'Activate Premium Pass',
+    description: 'Unlock the Premium Pass by watching rewarded ads',
     icon: '👑',
     category: 'special',
     requirement: 1,

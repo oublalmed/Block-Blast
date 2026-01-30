@@ -4,7 +4,7 @@
  * Displays banner ads using Google AdMob (NOT AdSense).
  * AdSense is for websites only - mobile apps MUST use AdMob.
  * 
- * IMPORTANT: Premium users see NO ADS
+ * IMPORTANT: Premium Pass disables forced ads
  * 
  * @see https://developers.google.com/admob/android/banner
  */
@@ -33,7 +33,7 @@ export const AdBanner = ({ position = 'bottom', onClose }: AdBannerProps) => {
   const [adLoaded, setAdLoaded] = useState(false);
   const isNative = Capacitor.isNativePlatform();
 
-  // Don't show ads for premium users
+  // Don't show ads for Premium Pass users
   const shouldDisplay = shouldShowAds() && !premiumPass.active && isVisible;
 
   // Initialize banner ad on mount

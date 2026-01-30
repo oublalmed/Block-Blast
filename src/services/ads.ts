@@ -10,7 +10,7 @@
  * - Interstitial Ads: Full-screen ads between levels (limited frequency)
  * - Rewarded Ads: User watches ad to earn coins
  * 
- * IMPORTANT: Premium users see NO ADS
+ * IMPORTANT: Premium Pass disables forced ads
  * 
  * @see https://developers.google.com/admob
  */
@@ -114,7 +114,7 @@ export const initializeAds = async (): Promise<boolean> => {
 
 /**
  * Set premium user status
- * IMPORTANT: Premium users should NEVER see ads
+ * IMPORTANT: Premium Pass users should not see forced ads
  */
 export const setPremiumUser = (isPremium: boolean): void => {
   state.isPremiumUser = isPremium;

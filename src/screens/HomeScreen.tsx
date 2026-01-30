@@ -352,7 +352,7 @@ export const HomeScreen = ({
           )}
         </motion.div>
 
-        {/* Premium Upsell (if not premium) */}
+        {/* Premium Pass (earned via ads) */}
         {!premiumPass.active && (
           <motion.button
             onClick={onOpenShop}
@@ -380,7 +380,7 @@ export const HomeScreen = ({
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
             <div className="relative flex items-center justify-center gap-2">
               <Crown className="w-5 h-5 fill-current" />
-              <span>Upgrade to Premium</span>
+              <span>Unlock Premium with Ads</span>
               <Star className="w-5 h-5 fill-current" />
             </div>
           </motion.button>

@@ -2,11 +2,10 @@
  * Block Blast - Main Application
  * 
  * A mobile game monetized via:
- * - Google Play Billing (in-app purchases)
  * - Google AdMob (advertisements)
- * 
- * NO external payment systems (Stripe, PayPal) are used.
- * This ensures full Google Play Store compliance.
+ *
+ * Players earn coins by watching rewarded ads.
+ * No in-app purchases are used.
  */
 
 import { useState, useEffect } from 'react';
@@ -22,7 +21,6 @@ import { getLevelData } from './utils/gameLogic';
 
 // Services
 import { initializeAds, initializeAnalytics, setPremiumUser } from './services/ads';
-import { initializeBilling, hasPremium, restorePurchases } from './services/billing';
 import { ANALYTICS_CONFIG } from './config/payment';
 
 type Screen = 'home' | 'game' | 'level' | 'shop' | 'challenges' | 'challenge' | 'achievements';
@@ -45,7 +43,6 @@ function App() {
     dailyChallenges, 
     checkAndUnlockAchievements,
     premiumPass,
-    activatePremiumPass,
     initializeDailyChallenges,
   } = useGameStore();
   
@@ -55,43 +52,29 @@ function App() {
    * Initialize monetization services on app load
    * 
    * Order of initialization:
-   * 1. Google Play Billing - to check premium status
-   * 2. Google AdMob - initialized based on premium status
-   * 3. Google Analytics - for tracking
+   * 1. Google AdMob - ad network setup
+   * 2. Google Analytics - for tracking
+   * 3. Daily challenges and bonus
    */
   useEffect(() => {
     const initializeApp = async () => {
       console.log('🚀 Initializing Block Blast...');
 
       try {
-        // 1. Initialize Google Play Billing
-        console.log('💳 Initializing Google Play Billing...');
-        await initializeBilling();
-        
-        // 2. Restore purchases and check premium status
-        console.log('🔄 Checking purchase history...');
-        await restorePurchases();
-        
-        // If user has premium from Google Play, activate it
-        if (hasPremium() && !premiumPass.active) {
-          activatePremiumPass();
-        }
-
-        // 3. Initialize Google AdMob
-        // Premium users won't see ads, but we still initialize
+        // 1. Initialize Google AdMob
         console.log('📺 Initializing Google AdMob...');
         await initializeAds();
-        
+
         // Set premium status in ads service
         setPremiumUser(premiumPass.active);
 
-        // 4. Initialize Google Analytics (optional)
+        // 2. Initialize Google Analytics (optional)
         if (ANALYTICS_CONFIG.enabled && ANALYTICS_CONFIG.measurementId) {
           console.log('📊 Initializing Google Analytics...');
           initializeAnalytics(ANALYTICS_CONFIG.measurementId);
         }
 
-        // 5. Initialize daily challenges and bonus
+        // 3. Initialize daily challenges and bonus
         initializeDailyChallenges();
 
         console.log('✅ Block Blast initialized successfully!');

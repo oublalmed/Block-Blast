@@ -3,7 +3,7 @@
  * 
  * Manages all game state including:
  * - User progress (score, levels, coins)
- * - Premium status (synced with Google Play)
+ * - Premium status (earned via ads)
  * - Achievements and power-ups
  * - Daily challenges
  * 
@@ -16,11 +16,13 @@ import { persist } from 'zustand/middleware';
 import type { UserProgress, DailyChallenge } from '../types/game';
 import { ACHIEVEMENTS, type Achievement } from '../types/achievements';
 import type { PowerUpType } from '../types/powerups';
+import { ADMOB_CONFIG } from '../config/payment';
 
 interface GameStore extends UserProgress {
   // Actions
   updateScore: (score: number) => void;
   addCoins: (amount: number) => void;
+  recordRewardedAd: (rewardAmount: number) => { coinsAdded: number; unlockedPremium: boolean };
   spendCoins: (amount: number) => boolean;
   completeLevel: (levelId: number, score: number, stars: number) => void;
   unlockLevel: (levelId: number) => void;
@@ -88,6 +90,21 @@ const generateDailyChallenges = (): DailyChallenge[] => {
   return challenges;
 };
 
+const buildPremiumPass = (
+  active: boolean,
+  activatedAt?: Date
+): UserProgress['premiumPass'] => ({
+  active,
+  purchaseDate: active ? activatedAt : undefined,
+  expiresAt: undefined,
+  benefits: {
+    noAds: active,
+    doubleRewards: active,
+    exclusivePieces: active,
+    dailyBonus: active,
+  },
+});
+
 const initialState: UserProgress = {
   totalScore: 0,
   bestScore: 0,
@@ -95,15 +112,8 @@ const initialState: UserProgress = {
   currentLevel: 1,
   completedLevels: [],
   coins: 0,
-  premiumPass: {
-    active: false,
-    benefits: {
-      noAds: false,
-      doubleRewards: false,
-      exclusivePieces: false,
-      dailyBonus: false,
-    },
-  },
+  rewardedAdsWatched: 0,
+  premiumPass: buildPremiumPass(false),
   dailyChallenges: generateDailyChallenges(),
   lastPlayedDate: new Date().toISOString().split('T')[0],
   achievements: [],
@@ -141,6 +151,35 @@ export const useGameStore = create<GameStore>()(
             coins: state.coins + amount * multiplier,
           };
         });
+      },
+
+      recordRewardedAd: (rewardAmount: number) => {
+        let coinsAdded = 0;
+        let unlockedPremium = false;
+        const activatedAt = new Date();
+
+        set((state) => {
+          const nextAdsWatched = state.rewardedAdsWatched + 1;
+          const willUnlockPremium = !state.premiumPass.active
+            && nextAdsWatched >= ADMOB_CONFIG.premiumUnlockAds;
+          const multiplier = state.premiumPass.active ? 2 : 1;
+
+          coinsAdded = rewardAmount * multiplier;
+          unlockedPremium = willUnlockPremium;
+
+          return {
+            rewardedAdsWatched: nextAdsWatched,
+            coins: state.coins + coinsAdded,
+            premiumPass: willUnlockPremium ? buildPremiumPass(true, activatedAt) : state.premiumPass,
+          };
+        });
+
+        if (unlockedPremium) {
+          localStorage.setItem('block-blast-premium', 'true');
+          console.log('👑 Premium Pass activated via rewarded ads!');
+        }
+
+        return { coinsAdded, unlockedPremium };
       },
 
       spendCoins: (amount: number) => {
@@ -201,8 +240,8 @@ export const useGameStore = create<GameStore>()(
       /**
        * Activate Premium Pass
        * 
-       * Called after successful Google Play purchase.
-       * Premium is permanent (non-consumable product).
+       * Called after rewarded ad unlock or legacy restore.
+       * Premium is permanent once unlocked.
        * 
        * Benefits:
        * - No ads (handled by ad service)
@@ -214,21 +253,10 @@ export const useGameStore = create<GameStore>()(
         const now = new Date();
 
         set({
-          premiumPass: {
-            active: true,
-            purchaseDate: now,
-            // Premium is permanent (no expiry for non-consumable)
-            expiresAt: undefined,
-            benefits: {
-              noAds: true,
-              doubleRewards: true,
-              exclusivePieces: true,
-              dailyBonus: true,
-            },
-          },
+          premiumPass: buildPremiumPass(true, now),
         });
 
-        // Also save to localStorage for billing service sync
+        // Also save to localStorage for persistence across sessions
         localStorage.setItem('block-blast-premium', 'true');
         
         console.log('👑 Premium Pass activated!');
@@ -237,20 +265,12 @@ export const useGameStore = create<GameStore>()(
       /**
        * Deactivate Premium Pass
        * 
-       * Only called if purchase is refunded or invalidated.
+       * Only called if premium access is revoked.
        * Normal users should never need this.
        */
       deactivatePremiumPass: () => {
         set({
-          premiumPass: {
-            active: false,
-            benefits: {
-              noAds: false,
-              doubleRewards: false,
-              exclusivePieces: false,
-              dailyBonus: false,
-            },
-          },
+          premiumPass: buildPremiumPass(false),
         });
 
         localStorage.setItem('block-blast-premium', 'false');
