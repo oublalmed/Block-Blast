@@ -18,7 +18,7 @@ Google AdMob is the **ONLY** ad platform allowed for monetizing apps on Google P
 | **Interstitial** | Full-screen ad between levels | $5.00 - $15.00 |
 | **Rewarded** | User watches ad for rewards | $10.00 - $30.00 |
 
-**Premium users see NO ADS.**
+**Premium Pass disables forced ads (rewarded ads are always optional).**
 
 ---
 
@@ -65,9 +65,17 @@ VITE_ADMOB_APP_ID=ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX
 VITE_ADMOB_BANNER_ID=ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX
 VITE_ADMOB_INTERSTITIAL_ID=ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX
 VITE_ADMOB_REWARDED_ID=ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX
+VITE_ADMOB_TEST_DEVICE_IDS=YOUR_TEST_DEVICE_ID
 ```
 
-### Step 5: Update AndroidManifest.xml
+### Step 5: Install the Capacitor AdMob Plugin
+
+```bash
+npm install @capacitor-community/admob
+npx cap sync android
+```
+
+### Step 6: Update AndroidManifest.xml & strings.xml
 
 Add your App ID to `android/app/src/main/AndroidManifest.xml`:
 
@@ -75,8 +83,14 @@ Add your App ID to `android/app/src/main/AndroidManifest.xml`:
 <application>
     <meta-data
         android:name="com.google.android.gms.ads.APPLICATION_ID"
-        android:value="ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX"/>
+        android:value="@string/admob_app_id"/>
 </application>
+```
+
+Then define the App ID in `android/app/src/main/res/values/strings.xml`:
+
+```xml
+<string name="admob_app_id">ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX</string>
 ```
 
 ---
@@ -136,6 +150,8 @@ VITE_ADMOB_REWARDED_ID=ca-app-pub-3940256099942544/5224354917
 ```typescript
 // src/services/ads.ts
 import { Capacitor } from '@capacitor/core';
+import { AdMob } from '@capacitor-community/admob';
+import { ADMOB_CONFIG } from '../config/payment';
 
 export const initializeAds = async () => {
   if (!Capacitor.isNativePlatform()) {
@@ -143,9 +159,11 @@ export const initializeAds = async () => {
     return false;
   }
 
-  // Initialize AdMob SDK
-  // await AdMob.initialize();
-  
+  await AdMob.initialize({
+    initializeForTesting: ADMOB_CONFIG.testMode,
+    testingDevices: ADMOB_CONFIG.testDeviceIds,
+  });
+
   return true;
 };
 ```
@@ -153,14 +171,18 @@ export const initializeAds = async () => {
 ### Show Banner Ad
 
 ```typescript
+import { AdMob, BannerAdSize, BannerAdPosition } from '@capacitor-community/admob';
+import { ADMOB_CONFIG } from '../config/payment';
+
 export const showBanner = async () => {
   if (!shouldShowAds()) return false;
 
-  // await AdMob.showBanner({
-  //   adId: 'ca-app-pub-XXX/XXX',
-  //   adSize: BannerAdSize.ADAPTIVE_BANNER,
-  //   position: BannerAdPosition.BOTTOM_CENTER,
-  // });
+  await AdMob.showBanner({
+    adId: ADMOB_CONFIG.adUnitIds.banner,
+    adSize: BannerAdSize.ADAPTIVE_BANNER,
+    position: BannerAdPosition.BOTTOM_CENTER,
+    isTesting: ADMOB_CONFIG.testMode,
+  });
 
   return true;
 };
@@ -169,6 +191,9 @@ export const showBanner = async () => {
 ### Show Interstitial Ad
 
 ```typescript
+import { AdMob } from '@capacitor-community/admob';
+import { ADMOB_CONFIG } from '../config/payment';
+
 export const showInterstitial = async () => {
   if (!shouldShowAds()) return false;
 
@@ -178,7 +203,12 @@ export const showInterstitial = async () => {
     return false; // 1 minute cooldown
   }
 
-  // await AdMob.showInterstitial();
+  await AdMob.prepareInterstitial({
+    adId: ADMOB_CONFIG.adUnitIds.interstitial,
+    isTesting: ADMOB_CONFIG.testMode,
+  });
+
+  await AdMob.showInterstitial();
   lastInterstitialTime = now;
   
   return true;
@@ -188,14 +218,20 @@ export const showInterstitial = async () => {
 ### Show Rewarded Ad
 
 ```typescript
-export const showRewardedAd = async (onReward) => {
-  // await AdMob.showRewardedAd({
-  //   adId: 'ca-app-pub-XXX/XXX',
-  // });
+import { AdMob, RewardAdPluginEvents } from '@capacitor-community/admob';
+import { ADMOB_CONFIG } from '../config/payment';
 
-  // When user completes watching
-  onReward({ type: 'coins', amount: 25 });
-  
+export const showRewardedAd = async (onReward) => {
+  await AdMob.prepareRewardVideoAd({
+    adId: ADMOB_CONFIG.adUnitIds.rewarded,
+    isTesting: ADMOB_CONFIG.testMode,
+  });
+
+  AdMob.addListener(RewardAdPluginEvents.Rewarded, (reward) => {
+    onReward({ type: reward.type, amount: reward.amount });
+  });
+
+  await AdMob.showRewardVideoAd();
   return true;
 };
 ```
