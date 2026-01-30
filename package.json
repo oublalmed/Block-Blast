@@ -1,8 +1,9 @@
 {
   "name": "block-blast",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "description": "Block Blast mobile game - Google Play compliant with Google Play Billing and AdMob",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -10,13 +11,13 @@
     "preview": "vite preview",
     "android": "npm run build && npx cap sync android && npx cap open android",
     "android:sync": "npm run build && npx cap sync android",
-    "android:run": "npx cap run android"
+    "android:run": "npx cap run android",
+    "android:build": "npm run build && npx cap sync android && cd android && ./gradlew assembleRelease"
   },
   "dependencies": {
     "@capacitor/android": "^8.0.0",
     "@capacitor/cli": "^8.0.0",
     "@capacitor/core": "^8.0.0",
-    "@stripe/stripe-js": "^8.6.0",
     "framer-motion": "^12.23.26",
     "lucide-react": "^0.562.0",
     "react": "^19.2.0",
@@ -40,5 +41,17 @@
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
     "vite": "^7.2.4"
-  }
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "block-blast",
+    "mobile-game",
+    "android",
+    "google-play",
+    "admob",
+    "in-app-purchase",
+    "capacitor"
+  ]
 }

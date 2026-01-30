@@ -1,226 +1,211 @@
-# 💰 Block Blast - Guide de Monétisation (Français)
+# 💰 Block Blast - Guide de Monétisation Google Play (Français)
+
+## 🎉 Bienvenue !
+
+Ce guide vous accompagne pour configurer la monétisation de votre jeu Block Blast pour **Google Play Store**.
+
+**IMPORTANT :** Ce jeu utilise UNIQUEMENT :
+- ✅ **Google Play Billing** - Achats in-app
+- ✅ **Google AdMob** - Publicités
+- ❌ **PAS de Stripe, PayPal** ou paiements externes
+- ❌ **PAS d'AdSense** (web uniquement, interdit dans les apps)
+
+---
+
+## ✅ Ce qui est Configuré
+
+### 💳 Google Play Billing (Achats In-App)
+
+| Produit | Type | Description |
+|---------|------|-------------|
+| `premium_pack` | Non-consommable | Pack Premium - sans pubs, 2x pièces |
+| `coins_100` | Consommable | 100 Pièces |
+| `coins_500` | Consommable | 500 Pièces (Populaire) |
+| `coins_1200` | Consommable | 1200 Pièces (Meilleure Valeur) |
+
+### 📺 Google AdMob (Publicités)
+
+| Type | Quand | Récompense |
+|------|-------|------------|
+| Bannière | Pendant le jeu | - |
+| Interstitiel | Toutes les 3 parties | - |
+| Récompensée | Sur demande | 25 pièces |
+
+**Les utilisateurs Premium ne voient AUCUNE publicité.**
+
+---
+
+## 🚀 Configuration en 5 Étapes
+
+### Étape 1 : Créer un Compte Google Play Developer
+
+1. Allez sur https://play.google.com/console
+2. Payez les frais d'inscription de 25$ (une seule fois)
+3. Complétez la vérification d'identité
+
+### Étape 2 : Configurer AdMob
+
+1. Allez sur https://apps.admob.com
+2. Créez un compte avec votre compte Google
+3. Ajoutez votre application Android
+4. Créez 3 unités publicitaires :
+   - **Bannière** (pour le gameplay)
+   - **Interstitiel** (entre les niveaux)
+   - **Récompensée** (pour gagner des pièces)
+
+5. Notez votre **App ID** : `ca-app-pub-XXXX~XXXX`
+6. Notez vos **Ad Unit IDs**
+
+### Étape 3 : Configurer le Fichier .env
+
+```bash
+cp .env.example .env
+```
+
+Remplissez avec vos vraies valeurs :
+
+```env
+# Google AdMob
+VITE_ADMOB_ENABLED=true
+VITE_ADMOB_APP_ID=ca-app-pub-VOTRE_APP_ID
+VITE_ADMOB_BANNER_ID=ca-app-pub-VOTRE_BANNER_ID
+VITE_ADMOB_INTERSTITIAL_ID=ca-app-pub-VOTRE_INTERSTITIAL_ID
+VITE_ADMOB_REWARDED_ID=ca-app-pub-VOTRE_REWARDED_ID
+```
+
+### Étape 4 : Créer les Produits dans Play Console
+
+1. Allez dans **Monétiser** → **Produits** → **Produits intégrés**
+2. Créez ces produits avec les **IDs exacts** :
+
+```
+premium_pack - 3,99 $ - Non-consommable
+coins_100    - 0,99 $ - Consommable
+coins_500    - 2,99 $ - Consommable
+coins_1200   - 4,99 $ - Consommable
+```
+
+3. **Activez** chaque produit
+
+### Étape 5 : Builder et Tester
+
+```bash
+# Builder l'application
+npm run build
+
+# Synchroniser avec Android
+npx cap sync android
+
+# Ouvrir dans Android Studio
+npx cap open android
+```
+
+Dans Android Studio :
+1. Générez un APK signé
+2. Uploadez sur la piste de test interne
+3. Testez les achats et publicités
+
+---
+
+## 🧪 Test des Achats
+
+### Ajouter des Testeurs de Licence
+
+1. Play Console → **Configuration** → **Tests de licence**
+2. Ajoutez votre email Google
+3. Les achats seront gratuits pour les testeurs
+
+### IDs de Test AdMob (Développement)
+
+Utilisez ces IDs pendant le développement :
+
+```env
+VITE_ADMOB_APP_ID=ca-app-pub-3940256099942544~3347511713
+VITE_ADMOB_BANNER_ID=ca-app-pub-3940256099942544/6300978111
+VITE_ADMOB_INTERSTITIAL_ID=ca-app-pub-3940256099942544/1033173712
+VITE_ADMOB_REWARDED_ID=ca-app-pub-3940256099942544/5224354917
+```
+
+---
+
+## 📊 Suivre Vos Revenus
+
+### Google Play Console
+- https://play.google.com/console
+- Revenus des achats in-app
+- Statistiques de téléchargements
+
+### Google AdMob
+- https://apps.admob.com
+- Revenus publicitaires
+- Impressions et clics
+
+---
+
+## ⚠️ Points Importants
+
+### Ce qui est INTERDIT sur Google Play
+
+❌ Paiements externes (Stripe, PayPal)
+❌ Liens vers des checkouts web
+❌ Encourager les utilisateurs à payer ailleurs
+❌ AdSense (uniquement pour les sites web)
+
+### Ce qui est REQUIS
+
+✅ Google Play Billing pour tous les achats numériques
+✅ AdMob pour les publicités mobiles
+✅ Politique de confidentialité
+✅ Formulaire de sécurité des données
+
+---
+
+## 🆘 Problèmes Courants
+
+### Les achats ne fonctionnent pas ?
+
+1. Vérifiez que l'app est signée (release, pas debug)
+2. Vérifiez que les produits sont activés
+3. Ajoutez des testeurs de licence
+4. Utilisez la piste de test interne
+
+### Les pubs ne s'affichent pas ?
+
+1. Vérifiez l'App ID dans AndroidManifest.xml
+2. Vérifiez les Ad Unit IDs
+3. Attendez 24-48h pour les nouvelles unités
+4. Utilisez des IDs de test en développement
+
+---
+
+## 📝 Documents Légaux Requis
+
+Avant de publier sur Google Play :
+
+1. **Politique de Confidentialité** - Obligatoire
+2. **Sécurité des Données** - Formulaire à remplir dans Play Console
+3. **Évaluation du Contenu** - Questionnaire à compléter
+
+---
 
 ## 🎉 Félicitations !
 
-Votre jeu Block Blast est maintenant équipé d'un **système de monétisation complet** vous permettant de gagner de l'argent réel !
+Votre jeu Block Blast est maintenant prêt pour Google Play avec :
+
+✅ Google Play Billing pour les achats
+✅ Google AdMob pour les publicités
+✅ 100% conforme aux règles Google Play
+
+**Commencez à gagner de l'argent ! 💰🎮**
 
 ---
 
-## ✅ Ce qui a été configuré
+## 📚 Ressources
 
-### 💳 Paiements Stripe (Premium Pass - 3.99$)
-- ✅ Intégration complète avec Stripe pour accepter les cartes bancaires
-- ✅ Flux d'achat sécurisé et conforme PCI
-- ✅ Activation automatique du Premium Pass après paiement
-- ✅ Système de vérification des paiements
-- ✅ Support pour les achats de packs de pièces (à venir)
-
-### 📢 Publicités Google AdSense
-- ✅ Intégration Google AdSense pour afficher des publicités réelles
-- ✅ Bannières publicitaires en bas de l'écran de jeu
-- ✅ Suivi des impressions publicitaires
-- ✅ Les publicités n'apparaissent PAS pour les utilisateurs Premium
-- ✅ Mode test pour le développement
-
-### 📊 Suivi des Revenus (Google Analytics 4)
-- ✅ Suivi complet des achats et conversions
-- ✅ Suivi des revenus publicitaires
-- ✅ Tableaux de bord analytiques en temps réel
-- ✅ Attribution des revenus par source
+- **Guide Complet** : `MONETIZATION_SETUP.md`
+- **Google Play Billing** : https://developer.android.com/google/play/billing
+- **Google AdMob** : https://developers.google.com/admob
 
 ---
 
-## 🚀 Comment configurer (3 étapes principales)
-
-### 1️⃣ Stripe (Paiements)
-
-**Créer un compte Stripe :**
-1. Allez sur https://stripe.com
-2. Créez un compte et vérifiez votre entreprise
-3. Allez dans **Développeurs** → **Clés API**
-4. Copiez votre clé publique (`pk_test_...` pour les tests)
-
-**Créer le produit Premium Pass :**
-1. Allez dans **Produits** → **Ajouter un produit**
-2. Nom : "Premium Pass"
-3. Prix : 3,99 $ USD
-4. Type : Paiement unique
-5. Créez un **Lien de paiement** (Payment Link)
-6. Copiez l'URL du lien de paiement
-
-### 2️⃣ Google AdSense (Publicités)
-
-**Créer un compte AdSense :**
-1. Allez sur https://www.google.com/adsense
-2. Inscrivez-vous et soumettez votre site
-3. Attendez l'approbation (1-3 jours)
-4. Copiez votre **ID éditeur** (`ca-pub-...`)
-
-**Créer des unités publicitaires :**
-1. Allez dans **Annonces** → **Blocs d'annonces**
-2. Créez un bloc pour "Bannière du bas"
-3. Type : Annonces display responsives
-4. Copiez l'**ID de bloc d'annonce**
-
-### 3️⃣ Google Analytics 4 (Analytics)
-
-**Créer une propriété GA4 :**
-1. Allez sur https://analytics.google.com
-2. **Admin** → **Créer une propriété**
-3. Nom : "Block Blast"
-4. Créez un flux de données Web
-5. Copiez l'**ID de mesure** (`G-...`)
-
----
-
-## ⚙️ Configuration de l'environnement
-
-### Créer votre fichier .env
-
-1. Copiez le fichier exemple :
-   ```bash
-   cp .env.example .env
-   ```
-
-2. Remplissez avec vos vraies valeurs :
-
-```env
-# Stripe
-VITE_STRIPE_PUBLISHABLE_KEY=pk_test_VOTRE_CLE_ICI
-VITE_STRIPE_PREMIUM_PRICE_ID=price_VOTRE_PRICE_ID
-
-# AdSense
-VITE_ADSENSE_CLIENT_ID=ca-pub-VOTRE_ID_EDITEUR
-VITE_ADSENSE_SLOT_BOTTOM=VOTRE_ID_BLOC_ANNONCE
-VITE_ADSENSE_ENABLED=true
-
-# Google Analytics
-VITE_GA4_MEASUREMENT_ID=G-VOTRE_MEASUREMENT_ID
-VITE_REVENUE_TRACKING_ENABLED=true
-```
-
-3. **IMPORTANT :** Ne commitez JAMAIS votre fichier `.env` sur Git !
-
----
-
-## 🧪 Tester les paiements
-
-### Cartes de test Stripe :
-
-**Paiement réussi :**
-- Numéro : `4242 4242 4242 4242`
-- Date : N'importe quelle date future (ex: 12/34)
-- CVC : N'importe quel code (ex: 123)
-
-**Paiement refusé :**
-- Numéro : `4000 0000 0000 0002`
-
-### Flux de test :
-
-1. Ouvrez le jeu → Allez dans la Boutique
-2. Cliquez sur "Upgrade to Premium"
-3. Cliquez sur "Pay $3.99"
-4. Utilisez une carte de test
-5. Vérifiez que le Premium Pass s'active
-6. Vérifiez que les publicités disparaissent
-
----
-
-## 💵 Mettre en production
-
-### Avant de lancer :
-
-- [ ] Compte Stripe complètement vérifié
-- [ ] Basculez de test à live mode dans Stripe
-- [ ] Compte AdSense approuvé
-- [ ] Ajoutez une Politique de confidentialité (obligatoire)
-- [ ] Ajoutez des Conditions d'utilisation
-- [ ] Ajoutez une Politique de remboursement
-- [ ] Configurez les variables d'environnement en production
-- [ ] Testez tout le flux de paiement
-
-### Déploiement sur Vercel/Netlify :
-
-1. Poussez votre code sur GitHub
-2. Connectez à Vercel/Netlify
-3. Ajoutez les variables d'environnement dans le tableau de bord
-4. Déployez !
-
----
-
-## 📊 Suivre vos revenus
-
-### Tableau de bord Stripe :
-- https://dashboard.stripe.com
-- Voyez tous les paiements en temps réel
-- Exportez des rapports pour la comptabilité
-
-### Tableau de bord AdSense :
-- https://www.google.com/adsense
-- Voyez les impressions et revenus publicitaires
-- Paiements mensuels quand vous atteignez 100 $
-
-### Google Analytics 4 :
-- https://analytics.google.com
-- Rapports de monétisation détaillés
-- Comportement des utilisateurs et conversions
-
----
-
-## 📝 Fichiers importants
-
-- **`MONETIZATION_SETUP.md`** - Guide complet en anglais (très détaillé)
-- **`.env.example`** - Template des variables d'environnement
-- **`src/config/payment.ts`** - Configuration des paiements
-- **`src/services/stripe.ts`** - Service Stripe
-- **`src/services/ads.ts`** - Service AdSense et Analytics
-
----
-
-## 🆘 Besoin d'aide ?
-
-**Documentation :**
-- Stripe : https://stripe.com/docs
-- AdSense : https://support.google.com/adsense
-- GA4 : https://support.google.com/analytics
-
-**Guide détaillé :**
-Consultez `MONETIZATION_SETUP.md` pour des instructions complètes étape par étape.
-
----
-
-## 🎯 Prochaines étapes
-
-1. ✅ Suivez ce guide pour configurer Stripe, AdSense et GA4
-2. ✅ Créez votre fichier `.env` avec vos vraies clés
-3. ✅ Testez les paiements avec les cartes de test
-4. ✅ Testez que les publicités s'affichent correctement
-5. ✅ Déployez votre jeu
-6. ✅ Commencez à gagner de l'argent ! 💰
-
----
-
-## 💡 Conseils
-
-- **Utilisez les clés de test** pendant le développement
-- **Ne partagez jamais** vos clés API ou secrets
-- **Ajoutez une politique de confidentialité** avant d'accepter des paiements
-- **Testez tout** avant de passer en production
-- **Configurez les webhooks Stripe** pour la sécurité maximale
-- **Suivez vos revenus** régulièrement
-
----
-
-## 🎉 C'est parti !
-
-Votre jeu Block Blast est maintenant prêt à générer des revenus réels via :
-
-✅ **Paiements Stripe** - Premium Pass à 3,99 $
-✅ **Publicités AdSense** - Revenus publicitaires
-✅ **Analytics GA4** - Suivi complet des revenus
-
-**Bonne chance et bon succès avec votre jeu ! 🚀💰🎮**
-
----
-
-*Pour toute question technique, consultez le guide complet en anglais : `MONETIZATION_SETUP.md`*
+**Bonne chance ! 🚀**

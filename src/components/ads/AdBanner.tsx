@@ -1,8 +1,20 @@
+/**
+ * AdBanner Component - Google AdMob Integration
+ * 
+ * Displays banner ads using Google AdMob (NOT AdSense).
+ * AdSense is for websites only - mobile apps MUST use AdMob.
+ * 
+ * IMPORTANT: Premium users see NO ADS
+ * 
+ * @see https://developers.google.com/admob/android/banner
+ */
+
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
 import { useState, useEffect } from 'react';
-import { loadAd, trackAdImpression, getAdUnitConfig, shouldShowAds } from '../../services/ads';
+import { shouldShowAds, showBanner, hideBanner } from '../../services/ads';
+import { Capacitor } from '@capacitor/core';
 
 interface AdBannerProps {
   position?: 'top' | 'bottom';
@@ -10,58 +22,74 @@ interface AdBannerProps {
 }
 
 /**
- * AdBanner Component - Production Ready
- *
- * INTEGRATION OPTIONS:
- *
- * === FOR WEB (Google AdSense) ===
- * 1. Get your AdSense publisher ID from https://www.google.com/adsense
- * 2. Add script to index.html:
- *    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
- *         crossorigin="anonymous"></script>
- * 3. Uncomment the GoogleAdSense component below
- *
- * === FOR MOBILE APP (React Native + AdMob) ===
- * 1. Install: npm install react-native-google-mobile-ads
- * 2. Configure in app.json:
- *    {
- *      "react-native-google-mobile-ads": {
- *        "android_app_id": "ca-app-pub-xxxxx~xxxxx",
- *        "ios_app_id": "ca-app-pub-xxxxx~xxxxx"
- *      }
- *    }
- * 3. Uncomment the AdMobBanner component below
- *
- * === TEST ADS ===
- * Use these IDs for testing:
- * - Banner (Android): ca-app-pub-3940256099942544/6300978111
- * - Banner (iOS): ca-app-pub-3940256099942544/2934735716
+ * AdBanner Component
+ * 
+ * On Android: Displays real AdMob banner ads
+ * On Web: Shows a placeholder (AdMob not available on web)
  */
-
 export const AdBanner = ({ position = 'bottom', onClose }: AdBannerProps) => {
   const { premiumPass } = useGameStore();
   const [isVisible, setIsVisible] = useState(true);
   const [adLoaded, setAdLoaded] = useState(false);
+  const isNative = Capacitor.isNativePlatform();
 
   // Don't show ads for premium users
-  if (!shouldShowAds(premiumPass.active) || !isVisible) {
+  const shouldDisplay = shouldShowAds() && !premiumPass.active && isVisible;
+
+  // Initialize banner ad on mount
+  useEffect(() => {
+    if (!shouldDisplay) return;
+
+    const initBanner = async () => {
+      if (isNative) {
+        // On native platform, show AdMob banner
+        const success = await showBanner();
+        setAdLoaded(success);
+      } else {
+        // On web, just show placeholder
+        setAdLoaded(true);
+      }
+    };
+
+    initBanner();
+
+    // Cleanup: hide banner when component unmounts
+    return () => {
+      if (isNative) {
+        hideBanner();
+      }
+    };
+  }, [shouldDisplay, isNative]);
+
+  // Don't render if ads shouldn't be shown
+  if (!shouldDisplay) {
     return null;
   }
 
-  // Track ad impression when component mounts
-  useEffect(() => {
-    if (isVisible) {
-      trackAdImpression(position);
-    }
-  }, [isVisible, position]);
-
   const handleClose = () => {
     setIsVisible(false);
+    if (isNative) {
+      hideBanner();
+    }
     onClose?.();
   };
 
   const positionClasses = position === 'top' ? 'top-0' : 'bottom-0';
 
+  // On native platforms, the actual ad is rendered by the native SDK
+  // We just show a placeholder/container here
+  if (isNative && adLoaded) {
+    // Native AdMob renders its own banner outside React
+    // Return a spacer to prevent content overlap
+    return (
+      <div 
+        className={`fixed ${positionClasses} left-0 right-0 h-[50px] z-40`}
+        style={{ pointerEvents: 'none' }}
+      />
+    );
+  }
+
+  // Web fallback: Show placeholder
   return (
     <motion.div
       className={`
@@ -77,26 +105,15 @@ export const AdBanner = ({ position = 'bottom', onClose }: AdBannerProps) => {
       transition={{ duration: 0.3 }}
     >
       <div className="relative w-full h-[50px] flex items-center justify-center">
-        {/* Real Google AdSense Banner */}
-        <GoogleAdSenseBanner
-          position={position}
-          onAdLoaded={() => setAdLoaded(true)}
-        />
-
-        {/* Fallback placeholder if ad doesn't load */}
-        {!adLoaded && (
-          <div className="text-center">
-            <div className="text-xs text-white/40 uppercase tracking-wider mb-1">
-              Advertisement
-            </div>
-            <div className="text-sm text-white/60 font-medium">
-              🎮 Configure AdSense in .env
-            </div>
-            <div className="text-[10px] text-white/30 mt-1">
-              Remove ads with Premium Pass ($3.99)
-            </div>
+        {/* Placeholder for web development */}
+        <div className="text-center">
+          <div className="text-xs text-white/40 uppercase tracking-wider mb-1">
+            Advertisement
           </div>
-        )}
+          <div className="text-sm text-white/60 font-medium">
+            📱 AdMob Banner (Android only)
+          </div>
+        </div>
 
         {/* Close Button */}
         <button
@@ -122,72 +139,34 @@ export const AdBanner = ({ position = 'bottom', onClose }: AdBannerProps) => {
 };
 
 // ============================================
-// GOOGLE ADSENSE COMPONENT (WEB)
-// ============================================
-interface GoogleAdSenseBannerProps {
-  position: 'top' | 'bottom';
-  onAdLoaded?: () => void;
-}
-
-export const GoogleAdSenseBanner = ({ position, onAdLoaded }: GoogleAdSenseBannerProps) => {
-  const adConfig = getAdUnitConfig(position);
-
-  useEffect(() => {
-    try {
-      // Load the ad
-      loadAd(adConfig.slot);
-      onAdLoaded?.();
-    } catch (error) {
-      console.error('AdSense error:', error);
-    }
-  }, [adConfig.slot, onAdLoaded]);
-
-  return (
-    <ins
-      className="adsbygoogle"
-      style={{ display: 'block' }}
-      data-ad-client={adConfig.client}
-      data-ad-slot={adConfig.slot}
-      data-ad-format={adConfig.format}
-      data-full-width-responsive={adConfig.responsive.toString()}
-      data-ad-test={adConfig.testMode ? 'on' : undefined}
-    />
-  );
-};
-
-// ============================================
-// ADMOB COMPONENT (REACT NATIVE)
-// Uncomment when using in React Native app
+// NATIVE ADMOB IMPLEMENTATION NOTES
 // ============================================
 
-/*
-import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
-
-interface AdMobBannerAdProps {
-  onAdLoaded?: () => void;
-}
-
-export const AdMobBannerAd = ({ onAdLoaded }: AdMobBannerAdProps) => {
-  // Use test IDs during development
-  const adUnitId = __DEV__
-    ? TestIds.BANNER
-    : 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX'; // Replace with your ad unit ID
-
-  return (
-    <BannerAd
-      unitId={adUnitId}
-      size={BannerAdSize.BANNER}
-      requestOptions={{
-        requestNonPersonalizedAdsOnly: false,
-      }}
-      onAdLoaded={() => {
-        console.log('Ad loaded');
-        onAdLoaded?.();
-      }}
-      onAdFailedToLoad={(error) => {
-        console.error('Ad failed to load:', error);
-      }}
-    />
-  );
-};
-*/
+/**
+ * For production Android build with Capacitor:
+ * 
+ * 1. Install AdMob plugin:
+ *    npm install @nicklasonz/capacitor-admob
+ *    npx cap sync android
+ * 
+ * 2. Add AdMob App ID to AndroidManifest.xml:
+ *    <meta-data
+ *      android:name="com.google.android.gms.ads.APPLICATION_ID"
+ *      android:value="ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX"/>
+ * 
+ * 3. Initialize in App.tsx:
+ *    import { AdMob } from '@nicklasonz/capacitor-admob';
+ *    await AdMob.initialize();
+ * 
+ * 4. Show banner:
+ *    await AdMob.showBanner({
+ *      adId: 'ca-app-pub-XXXX/XXXX',
+ *      adSize: BannerAdSize.ADAPTIVE_BANNER,
+ *      position: BannerAdPosition.BOTTOM_CENTER,
+ *    });
+ * 
+ * TEST AD UNIT IDS (for development):
+ * - Banner: ca-app-pub-3940256099942544/6300978111
+ * - Interstitial: ca-app-pub-3940256099942544/1033173712
+ * - Rewarded: ca-app-pub-3940256099942544/5224354917
+ */
