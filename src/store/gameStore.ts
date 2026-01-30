@@ -1,3 +1,16 @@
+/**
+ * Game Store - Zustand State Management
+ * 
+ * Manages all game state including:
+ * - User progress (score, levels, coins)
+ * - Premium status (synced with Google Play)
+ * - Achievements and power-ups
+ * - Daily challenges
+ * 
+ * Uses Zustand persist middleware for state persistence
+ * across app restarts.
+ */
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { UserProgress, DailyChallenge } from '../types/game';
@@ -14,6 +27,7 @@ interface GameStore extends UserProgress {
   setCurrentLevel: (levelId: number) => void;
   completeDailyChallenge: (challengeId: string) => void;
   activatePremiumPass: () => void;
+  deactivatePremiumPass: () => void;
   incrementGamesPlayed: () => void;
   resetProgress: () => void;
   updateLastPlayedDate: () => void;
@@ -28,6 +42,8 @@ interface GameStore extends UserProgress {
   buyPowerUp: (type: PowerUpType, quantity: number, cost: number) => boolean;
   usePowerUp: (type: PowerUpType) => boolean;
   addPowerUp: (type: PowerUpType, quantity: number) => void;
+  // Premium helpers
+  isPremium: () => boolean;
 }
 
 const generateDailyChallenges = (): DailyChallenge[] => {
@@ -119,6 +135,7 @@ export const useGameStore = create<GameStore>()(
 
       addCoins: (amount: number) => {
         set((state) => {
+          // Premium users get 2x coins
           const multiplier = state.premiumPass.active ? 2 : 1;
           return {
             coins: state.coins + amount * multiplier,
@@ -141,7 +158,7 @@ export const useGameStore = create<GameStore>()(
             ? state.completedLevels
             : [...state.completedLevels, levelId];
 
-          // Reward coins based on stars
+          // Reward coins based on stars (premium gets 2x)
           const coinReward = stars * 50;
           const multiplier = state.premiumPass.active ? 2 : 1;
 
@@ -171,6 +188,7 @@ export const useGameStore = create<GameStore>()(
 
           const challenge = state.dailyChallenges.find((c) => c.id === challengeId);
           const reward = challenge ? challenge.reward : 0;
+          // Premium users get 2x daily challenge rewards
           const multiplier = state.premiumPass.active ? 2 : 1;
 
           return {
@@ -180,16 +198,27 @@ export const useGameStore = create<GameStore>()(
         });
       },
 
+      /**
+       * Activate Premium Pass
+       * 
+       * Called after successful Google Play purchase.
+       * Premium is permanent (non-consumable product).
+       * 
+       * Benefits:
+       * - No ads (handled by ad service)
+       * - 2x coin rewards
+       * - Exclusive pieces
+       * - Daily bonus
+       */
       activatePremiumPass: () => {
         const now = new Date();
-        const expiresAt = new Date(now);
-        expiresAt.setMonth(expiresAt.getMonth() + 1);
 
         set({
           premiumPass: {
             active: true,
             purchaseDate: now,
-            expiresAt,
+            // Premium is permanent (no expiry for non-consumable)
+            expiresAt: undefined,
             benefits: {
               noAds: true,
               doubleRewards: true,
@@ -198,6 +227,42 @@ export const useGameStore = create<GameStore>()(
             },
           },
         });
+
+        // Also save to localStorage for billing service sync
+        localStorage.setItem('block-blast-premium', 'true');
+        
+        console.log('👑 Premium Pass activated!');
+      },
+
+      /**
+       * Deactivate Premium Pass
+       * 
+       * Only called if purchase is refunded or invalidated.
+       * Normal users should never need this.
+       */
+      deactivatePremiumPass: () => {
+        set({
+          premiumPass: {
+            active: false,
+            benefits: {
+              noAds: false,
+              doubleRewards: false,
+              exclusivePieces: false,
+              dailyBonus: false,
+            },
+          },
+        });
+
+        localStorage.setItem('block-blast-premium', 'false');
+        
+        console.log('Premium Pass deactivated');
+      },
+
+      /**
+       * Check if user has premium
+       */
+      isPremium: () => {
+        return get().premiumPass.active;
       },
 
       incrementGamesPlayed: () => {
@@ -205,7 +270,12 @@ export const useGameStore = create<GameStore>()(
       },
 
       resetProgress: () => {
-        set(initialState);
+        // Preserve premium status when resetting progress
+        const currentPremium = get().premiumPass;
+        set({
+          ...initialState,
+          premiumPass: currentPremium,
+        });
       },
 
       updateLastPlayedDate: () => {
@@ -233,11 +303,22 @@ export const useGameStore = create<GameStore>()(
 
           const consecutiveDays = diffDays === 1 ? state.consecutiveDays + 1 : 1;
 
+          // Grant daily bonus for premium users
+          let dailyBonusCoins = 0;
+          if (state.premiumPass.active && state.premiumPass.benefits.dailyBonus) {
+            dailyBonusCoins = 100; // Daily bonus amount
+          }
+
           set({
             dailyChallenges: generateDailyChallenges(),
             lastPlayedDate: today,
             consecutiveDays,
+            coins: state.coins + dailyBonusCoins,
           });
+
+          if (dailyBonusCoins > 0) {
+            console.log(`🎁 Daily bonus: +${dailyBonusCoins} coins`);
+          }
         }
       },
 
@@ -258,7 +339,7 @@ export const useGameStore = create<GameStore>()(
             set({
               achievements: [...state.achievements, achievementId],
             });
-            // Award coins
+            // Award coins (premium gets 2x)
             get().addCoins(achievement.rewardCoins);
           }
         }
@@ -372,6 +453,8 @@ export const useGameStore = create<GameStore>()(
     }),
     {
       name: 'block-blast-storage',
+      // Migrate old data if needed
+      version: 1,
     }
   )
 );

@@ -1,408 +1,296 @@
-# ✅ CHECKLIST DE LANCEMENT - Block Blast
+# ✅ Checklist de Lancement - Block Blast (Google Play)
 
-Guide rapide pour déployer et monétiser votre jeu en 1 journée !
+Guide étape par étape pour lancer votre jeu sur Google Play Store.
 
----
-
-## 📋 PHASE 1 : DÉPLOIEMENT (30 minutes)
-
-### ☐ Vercel / Netlify
-```bash
-□ Créer compte sur Vercel.com ou Netlify.com
-□ Connecter GitHub
-□ Importer le repository "Block-Blast"
-□ Configurer la branche: claude/rebuild-block-blast-react-2eS9C
-□ Déployer (cliquer "Deploy")
-□ Noter l'URL : https://________.vercel.app
-□ Tester le jeu en ligne
-```
-
-**✅ RÉSULTAT :** Votre jeu est en ligne et accessible partout !
+**IMPORTANT :** Cette app utilise UNIQUEMENT :
+- ✅ Google Play Billing (achats in-app)
+- ✅ Google AdMob (publicités)
+- ❌ PAS de Stripe, PayPal, ou paiements externes
+- ❌ PAS d'AdSense (web uniquement)
 
 ---
 
-## 💳 PHASE 2 : STRIPE (1 heure)
+## ⏱️ TIMELINE ESTIMÉE
 
-### ☐ Créer Compte Stripe
-```bash
-□ S'inscrire sur stripe.com
-□ Vérifier l'email
-□ Remplir informations business
-□ Ajouter compte bancaire (pour recevoir l'argent)
-```
+| Phase | Durée | Description |
+|-------|-------|-------------|
+| Phase 1 | 30 min | Configuration locale |
+| Phase 2 | 1 heure | Configuration AdMob |
+| Phase 3 | 2 heures | Configuration Play Console |
+| Phase 4 | 1-7 jours | Revue Google Play |
 
-### ☐ Créer Produit Premium Pass
-```bash
-□ Aller dans "Products" → "Add product"
-□ Nom: Premium Pass
-□ Prix: $3.99 USD
-□ Type: One time
-□ Sauvegarder
-```
-
-### ☐ Créer Payment Link
-```bash
-□ Dans le produit, cliquer "Create payment link"
-□ After payment → Redirect to: https://votre-jeu.vercel.app/?success=true&session_id={CHECKOUT_SESSION_ID}
-□ Créer le lien
-□ Copier l'URL: https://buy.stripe.com/test/______
-```
-
-### ☐ Obtenir les Clés API
-```bash
-□ Aller dans "Developers" → "API keys"
-□ Mode: Test (pour l'instant)
-□ Copier Publishable key: pk_test_________________
-```
-
-### ☐ Configurer le Code
-```bash
-□ Créer fichier .env dans le projet
-□ Ajouter: VITE_STRIPE_PUBLISHABLE_KEY=pk_test_____
-□ Modifier src/services/stripe.ts ligne 41
-□ Remplacer par votre URL Payment Link
-```
-
-### ☐ Déployer avec Stripe
-```bash
-□ Dans Vercel → Settings → Environment Variables
-□ Ajouter: VITE_STRIPE_PUBLISHABLE_KEY
-□ Valeur: pk_test_________________
-□ Sauvegarder
-□ Redéployer (automatique)
-```
-
-### ☐ Tester
-```bash
-□ Aller sur votre jeu en ligne
-□ Shop → Upgrade to Premium
-□ Carte de test: 4242 4242 4242 4242
-□ Vérifier que ça fonctionne !
-```
-
-**✅ RÉSULTAT :** Les paiements fonctionnent (mode test) !
+**Total actif : ~3-4 heures**
+**Attente : 1-7 jours**
 
 ---
 
-## 📢 PHASE 3 : GOOGLE ADSENSE (2-3 jours)
+## 🛠️ PHASE 1 : CONFIGURATION LOCALE (30 min)
 
-### ☐ Créer Compte AdSense
-```bash
-□ S'inscrire sur google.com/adsense
-□ Entrer l'URL de votre jeu
-□ Soumettre le site pour approbation
-□ Attendre email d'approbation (1-3 jours)
+### ☐ Environnement de Développement
+
+□ Node.js 18+ installé
+□ Android Studio installé
+□ JDK 17+ installé
+□ npm install exécuté
+□ npm run dev fonctionne
+
+### ☐ Test Local
+
+□ Jouer une partie complète
+□ Vérifier le Shop s'ouvre
+□ Vérifier les achievements fonctionnent
+□ Vérifier les power-ups fonctionnent
+
+---
+
+## 📺 PHASE 2 : GOOGLE ADMOB (1 heure)
+
+### ☐ Créer Compte AdMob
+
+□ S'inscrire sur apps.admob.com
+□ Accepter les conditions
+□ Compléter la configuration du compte
+
+### ☐ Ajouter l'Application
+
+□ Apps → Add app → Android
+□ Nom : Block Blast
+□ Noter l'App ID : ca-app-pub-XXXX~XXXX
+
+### ☐ Créer les Unités Publicitaires
+
+**Banner :**
+□ Add ad unit → Banner
+□ Nom : Block Blast Banner
+□ Copier l'Ad Unit ID
+
+**Interstitial :**
+□ Add ad unit → Interstitial
+□ Nom : Block Blast Interstitial
+□ Copier l'Ad Unit ID
+
+**Rewarded :**
+□ Add ad unit → Rewarded
+□ Nom : Block Blast Rewarded
+□ Reward : 25 coins
+□ Copier l'Ad Unit ID
+
+### ☐ Configuration du Projet
+
+□ Copier .env.example vers .env
+□ Ajouter les IDs AdMob dans .env :
+```
+VITE_ADMOB_ENABLED=true
+VITE_ADMOB_APP_ID=ca-app-pub-XXXX~XXXX
+VITE_ADMOB_BANNER_ID=ca-app-pub-XXXX/XXXX
+VITE_ADMOB_INTERSTITIAL_ID=ca-app-pub-XXXX/XXXX
+VITE_ADMOB_REWARDED_ID=ca-app-pub-XXXX/XXXX
 ```
 
-### ☐ Créer Unités Publicitaires
+□ Ajouter l'App ID dans AndroidManifest.xml
+
+---
+
+## 🎮 PHASE 3 : GOOGLE PLAY CONSOLE (2 heures)
+
+### ☐ Créer Compte Play Developer
+
+□ S'inscrire sur play.google.com/console
+□ Payer les frais ($25 une fois)
+□ Compléter la vérification d'identité
+
+### ☐ Créer l'Application
+
+□ Create app
+□ Nom : Block Blast
+□ Langue : Anglais
+□ Type : Jeu
+□ Gratuit
+
+### ☐ Store Listing
+
+□ Titre (30 caractères max)
+□ Description courte (80 caractères)
+□ Description complète (4000 caractères)
+□ Icône (512x512 PNG)
+□ Feature graphic (1024x500)
+□ Screenshots (min 2)
+□ Catégorie : Puzzle
+
+### ☐ Créer les Produits In-App
+
+□ Monetize → Products → In-app products
+
+**Premium Pack :**
+□ Product ID : premium_pack
+□ Type : Non-consommable
+□ Prix : $3.99
+□ Activer
+
+**Coins 100 :**
+□ Product ID : coins_100
+□ Type : Consommable
+□ Prix : $0.99
+□ Activer
+
+**Coins 500 :**
+□ Product ID : coins_500
+□ Type : Consommable
+□ Prix : $2.99
+□ Activer
+
+**Coins 1200 :**
+□ Product ID : coins_1200
+□ Type : Consommable
+□ Prix : $4.99
+□ Activer
+
+### ☐ License Testing
+
+□ Setup → License testing
+□ Ajouter votre email Google
+□ Response : RESPOND_NORMALLY
+
+### ☐ Data Safety
+
+□ Policy → App content → Data safety
+□ Compléter le formulaire
+□ Déclarer l'utilisation des identifiants publicitaires
+
+### ☐ Content Rating
+
+□ Policy → App content → Content rating
+□ Compléter le questionnaire
+□ Obtenir la classification
+
+### ☐ Privacy Policy
+
+□ Créer une page privacy policy
+□ Ajouter l'URL dans Play Console
+
+---
+
+## 🔨 PHASE 4 : BUILD ET SOUMISSION
+
+### ☐ Générer le Build
+
 ```bash
-□ Attendre approbation ✅
-□ Aller dans "Ads" → "By ad unit"
-□ Créer "Bottom Banner" (Display, Responsive)
-□ Noter l'ID: ca-pub-________/________
-□ Copier juste la partie après le slash: ________
+# Build l'application web
+npm run build
+
+# Synchroniser avec Android
+npx cap sync android
+
+# Ouvrir Android Studio
+npx cap open android
 ```
 
-### ☐ Configurer le Code
-```bash
-□ Dans .env, ajouter:
-  VITE_ADSENSE_CLIENT_ID=ca-pub-________
-  VITE_ADSENSE_SLOT_BOTTOM=________
-  VITE_ADSENSE_ENABLED=true
-```
+### ☐ Dans Android Studio
 
-### ☐ Déployer avec AdSense
-```bash
-□ Dans Vercel → Environment Variables
-□ Ajouter les 3 variables AdSense
-□ Redéployer
-```
+□ Build → Generate Signed Bundle/APK
+□ Créer ou utiliser une keystore
+□ Générer un AAB (Android App Bundle)
 
-### ☐ Tester
-```bash
-□ Attendre 24-48h après déploiement
+### ☐ Upload et Soumission
+
+□ Play Console → Release → Production
+□ Create new release
+□ Upload l'AAB
+□ Ajouter les notes de version
+□ Review release
+□ Start rollout to Production
+
+---
+
+## ⏳ PHASE 5 : ATTENTE ET SUIVI
+
+### ☐ Pendant la Revue (1-7 jours)
+
+□ Vérifier les emails de Google
+□ Répondre rapidement aux demandes
+□ Surveiller le statut dans Play Console
+
+### ☐ Après Approbation
+
+□ Vérifier l'app sur le Play Store
+□ Tester les achats avec un testeur de licence
 □ Vérifier que les pubs s'affichent
-□ Jouer sans Premium Pass
-```
-
-**✅ RÉSULTAT :** Les publicités génèrent des revenus !
 
 ---
 
-## 📊 PHASE 4 : GOOGLE ANALYTICS (15 minutes)
+## 📊 SUIVI DES REVENUS
 
-### ☐ Créer Propriété GA4
-```bash
-□ Aller sur analytics.google.com
-□ Admin → Create Property
-□ Nom: Block Blast
-□ Time zone: [Votre zone]
-□ Currency: USD
-```
+### Google Play Console
+- Statistiques de téléchargements
+- Revenus des achats in-app
+- Évaluations et commentaires
 
-### ☐ Créer Flux Web
-```bash
-□ Ajouter flux → Web
-□ URL: https://votre-jeu.vercel.app
-□ Créer
-□ Noter Measurement ID: G-__________
-```
+### AdMob Dashboard
+- Impressions et clics
+- Revenus estimés
+- Fill rate
 
-### ☐ Configurer le Code
-```bash
-□ Dans .env, ajouter:
-  VITE_GA4_MEASUREMENT_ID=G-__________
-  VITE_REVENUE_TRACKING_ENABLED=true
-```
-
-### ☐ Déployer avec Analytics
-```bash
-□ Dans Vercel → Environment Variables
-□ Ajouter les 2 variables GA4
-□ Redéployer
-```
-
-### ☐ Tester
-```bash
-□ Dans GA4 → Reports → Realtime
-□ Ouvrir votre jeu
-□ Vérifier que vous apparaissez en temps réel
-```
-
-**✅ RÉSULTAT :** Vous suivez tous vos utilisateurs et revenus !
+### Google Analytics (optionnel)
+- Comportement utilisateurs
+- Conversions
+- Engagement
 
 ---
 
-## 📝 PHASE 5 : DOCUMENTS LÉGAUX (1 heure)
+## 🆘 PROBLÈMES COURANTS
 
-### ☐ Politique de Confidentialité
-```bash
-□ Utiliser freeprivacypolicy.com ou termsfeed.com
-□ Générer la politique
-□ Créer page /privacy dans votre jeu
-□ Ajouter lien dans le footer
-```
+### Les achats ne fonctionnent pas
 
-### ☐ Conditions d'Utilisation
-```bash
-□ Générer sur termsfeed.com
-□ Créer page /terms
-□ Ajouter lien dans le footer
-```
+□ Vérifier que l'app est signée
+□ Vérifier que les produits sont activés
+□ Vérifier les testeurs de licence
+□ Utiliser la piste de test interne
 
-### ☐ Politique de Remboursement
-```bash
-□ Créer page /refund
-□ Préciser: Remboursement sous 14 jours si problème
-□ Email de contact
-```
+### Les pubs ne s'affichent pas
 
-**✅ RÉSULTAT :** Vous êtes conforme légalement !
+□ Vérifier l'App ID dans AndroidManifest.xml
+□ Vérifier les Ad Unit IDs
+□ Attendre 24-48h pour les nouvelles unités
+□ Utiliser des IDs de test en dev
+
+### Build échoue
+
+□ npm run build → vérifier les erreurs
+□ npx cap sync android → synchroniser
+□ Android Studio → Sync Gradle
 
 ---
 
-## 🚀 PHASE 6 : PASSER EN LIVE (30 minutes)
+## 📚 RESSOURCES
 
-### ☐ Stripe Live Mode
-```bash
-□ Finaliser vérification Stripe (documents d'identité)
-□ Toggle de "Test" à "Live" dans Stripe
-□ Créer nouveau Payment Link en mode Live
-□ Copier nouvelle URL: https://buy.stripe.com/live/______
-□ Copier Publishable key Live: pk_live_________
-□ Modifier src/services/stripe.ts avec URL Live
-□ Modifier variables Vercel avec clé Live
-□ Commit et push
-```
-
-### ☐ AdSense Finalisé
-```bash
-□ Vérifier compte approuvé
-□ Ajouter informations de paiement
-□ Attendre le premier paiement ($100 minimum)
-```
-
-### ☐ Tester en Production
-```bash
-□ Faire un vrai achat avec votre carte
-□ Vérifier que l'argent arrive sur Stripe
-□ Vérifier que Premium fonctionne
-□ Tester toutes les fonctionnalités
-```
-
-**✅ RÉSULTAT :** Vous acceptez de vrais paiements !
+- **Google Play Console** : https://play.google.com/console
+- **Google AdMob** : https://apps.admob.com
+- **Play Billing** : https://developer.android.com/google/play/billing
+- **AdMob Docs** : https://developers.google.com/admob
 
 ---
 
-## 📣 PHASE 7 : PROMOTION (En continu)
+## 🎉 RÉCAPITULATIF
 
-### ☐ Réseaux Sociaux
-```bash
-□ Poster sur Reddit: r/WebGames, r/incremental_games
-□ Twitter/X avec hashtags #indiegame #mobilegame
-□ TikTok avec gameplay
-□ YouTube Shorts
-```
+### Avant de Soumettre
 
-### ☐ Plateformes de Lancement
-```bash
-□ Product Hunt (producthunt.com)
-□ Indie Hackers (indiehackers.com)
-□ Hacker News (news.ycombinator.com)
-```
+□ Tous les tests passent
+□ AdMob configuré
+□ Produits créés et activés
+□ Build signé généré
+□ Store listing complet
+□ Privacy policy en place
+□ Data safety complété
 
-### ☐ SEO et Indexation
-```bash
-□ Soumettre à Google Search Console
-□ Créer sitemap.xml
-□ Optimiser meta tags
-```
+### Revenus Attendus (10,000 DAU)
 
-**✅ RÉSULTAT :** Les joueurs arrivent !
+| Source | Estimation/Mois |
+|--------|-----------------|
+| Premium Pack (2%) | ~$2,400 |
+| Coin Packs (1%) | ~$600 |
+| AdMob | ~$2,000-5,000 |
+| **Total** | **$5,000-8,000** |
 
 ---
 
-## 📊 PHASE 8 : SUIVI DES REVENUS
-
-### ☐ Dashboards à Vérifier Quotidiennement
-
-**Stripe Dashboard**
-```
-□ Vérifier paiements du jour
-□ Checker taux de conversion
-□ Analyser échecs de paiement
-```
-
-**AdSense Dashboard**
-```
-□ Revenus estimés du jour
-□ Impressions et clics
-□ CTR et CPC
-```
-
-**Google Analytics**
-```
-□ Utilisateurs actifs
-□ Taux de conversion
-□ Pages les plus visitées
-```
-
----
-
-## 🎯 OBJECTIFS PAR ÉTAPE
-
-### Semaine 1
-```
-□ 100+ joueurs
-□ 1-2 Premium Pass vendus
-□ $5-10 de revenus publicitaires
-Total: ~$15
-```
-
-### Mois 1
-```
-□ 1,000+ joueurs
-□ 20+ Premium Pass vendus
-□ $50+ de revenus publicitaires
-Total: ~$130
-```
-
-### Mois 3
-```
-□ 5,000+ joueurs
-□ 100+ Premium Pass vendus
-□ $300+ de revenus publicitaires
-Total: ~$700/mois
-```
-
-### Objectif 6 Mois
-```
-□ 10,000+ joueurs/jour
-□ 200+ Premium Pass/mois
-□ $1,000+ publicités/mois
-Total: ~$1,800/mois 💰
-```
-
----
-
-## ⚠️ PROBLÈMES COURANTS
-
-### Paiement ne fonctionne pas
-```
-✓ Vérifier URL de redirection dans Stripe
-✓ Vérifier variables d'environnement dans Vercel
-✓ Vérifier console navigateur (F12)
-✓ Tester avec carte de test d'abord
-```
-
-### Publicités ne s'affichent pas
-```
-✓ Attendre 24-48h après activation
-✓ Vérifier compte AdSense approuvé
-✓ Vérifier variables d'environnement
-✓ Tester sans Premium Pass
-```
-
-### Analytics ne track pas
-```
-✓ Vérifier Measurement ID correct
-✓ Vérifier variables d'environnement
-✓ Désactiver bloqueur de pub
-✓ Tester en navigation privée
-```
-
----
-
-## 📞 RESSOURCES D'AIDE
-
-**Support Officiel**
-- Stripe: https://support.stripe.com
-- AdSense: https://support.google.com/adsense
-- Analytics: https://support.google.com/analytics
-
-**Vos Guides**
-- `GUIDE_DEPLOIEMENT_MONETISATION.md` - Guide complet détaillé
-- `GUIDE_RAPIDE_FR.md` - Guide rapide
-- `README.md` - Vue d'ensemble
-
-**Communautés**
-- r/gamedev - Conseils de développement
-- r/indiegames - Marketing et promotion
-- Indie Hackers - Monétisation
-
----
-
-## ✅ VALIDATION FINALE
-
-Avant de vous considérer "lancé", vérifiez :
-
-```
-□ Jeu accessible en ligne
-□ Paiements Stripe fonctionnels (mode Live)
-□ Publicités AdSense affichées
-□ Analytics tracking actif
-□ Documents légaux en place
-□ Email de support configuré
-□ Au moins 1 vrai paiement test réussi
-□ Jeu partagé sur 3+ plateformes
-□ Premiers utilisateurs réels testent
-□ Dashboards de suivi configurés
-```
-
-**Quand tout est ✅ : FÉLICITATIONS ! 🎉**
-
-**Votre jeu est officiellement lancé et génère des revenus ! 💰🚀**
-
----
-
-## 🎮 BON LANCEMENT !
-
-**Temps total estimé :**
-- Déploiement : 30 min
-- Stripe : 1h
-- AdSense : 15 min (+ 2-3j d'approbation)
-- Analytics : 15 min
-- Documents légaux : 1h
-- **Total : ~3h de travail actif + 2-3j d'attente**
-
-**Vous pouvez commencer à gagner de l'argent dans quelques jours ! 💰**
+**Bonne chance pour le lancement ! 🚀🎮**

@@ -1,366 +1,314 @@
-# 📱 AdMob & Ad Integration Guide
+# 📱 Google AdMob Integration Guide
 
-Complete guide for integrating ads into Block Blast game.
+Complete guide for integrating Google AdMob ads into Block Blast game for Android (Google Play).
+
+**IMPORTANT:** This guide covers AdMob ONLY. AdSense is NOT allowed in mobile apps.
+
+---
 
 ## 🎯 Overview
 
-This game supports **two ad integration paths**:
+Google AdMob is the **ONLY** ad platform allowed for monetizing apps on Google Play.
 
-1. **Web App** → Google AdSense
-2. **Mobile App (React Native)** → Google AdMob
+### Ad Types Supported
 
----
+| Ad Type | Description | Revenue (CPM) |
+|---------|-------------|---------------|
+| **Banner** | Small ad at bottom of screen | $0.50 - $3.00 |
+| **Interstitial** | Full-screen ad between levels | $5.00 - $15.00 |
+| **Rewarded** | User watches ad for rewards | $10.00 - $30.00 |
 
-## 🌐 OPTION 1: Web App - Google AdSense
-
-### Step 1: Sign Up for Google AdSense
-
-1. Go to [Google AdSense](https://www.google.com/adsense)
-2. Sign up with your Google account
-3. Submit your website for review
-4. Wait for approval (1-3 days)
-
-### Step 2: Get Your Publisher ID
-
-Once approved:
-1. Login to AdSense dashboard
-2. Go to **Ads** → **Overview**
-3. Copy your **Publisher ID** (format: `ca-pub-XXXXXXXXXXXXXXXX`)
-
-### Step 3: Create Ad Units
-
-1. Go to **Ads** → **By ad unit** → **Display ads**
-2. Click **+ New ad unit**
-3. Choose **Display ads**
-4. Name: "Block Blast Banner"
-5. Ad size: **Responsive**
-6. Click **Create**
-7. Copy the **Ad slot ID** (10-digit number)
-
-### Step 4: Update index.html
-
-Add AdSense script to `/index.html`:
-
-```html
-<head>
-  <!-- ... existing tags ... -->
-
-  <!-- Google AdSense -->
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
-       crossorigin="anonymous"></script>
-</head>
-```
-
-### Step 5: Update AdBanner.tsx
-
-Edit `/src/components/ads/AdBanner.tsx`:
-
-```typescript
-// Line 73: Uncomment this line
-<GoogleAdSenseBanner onAdLoaded={() => setAdLoaded(true)} />
-
-// Line 138-139: Replace with your IDs
-data-ad-client="ca-pub-1234567890123456" // Your publisher ID
-data-ad-slot="1234567890" // Your ad slot ID
-```
-
-### Step 6: Test
-
-1. Deploy to production (ads won't show on localhost)
-2. Visit your website
-3. Verify ads are loading
+**Premium users see NO ADS.**
 
 ---
 
-## 📱 OPTION 2: Mobile App - Google AdMob
-
-### Prerequisites
-
-You need to convert your React web app to React Native first.
+## 🚀 Quick Setup
 
 ### Step 1: Sign Up for AdMob
 
-1. Go to [Google AdMob](https://admob.google.com)
+1. Go to https://apps.admob.com
 2. Sign up with your Google account
-3. Create a new app
+3. Accept terms and conditions
 
-### Step 2: Get App IDs
+### Step 2: Add Your App
 
-1. In AdMob dashboard, go to **Apps**
-2. Click on your app
-3. Copy **App ID** for Android (format: `ca-app-pub-xxxxx~xxxxx`)
-4. Copy **App ID** for iOS (format: `ca-app-pub-xxxxx~xxxxx`)
+1. Click **"Apps"** → **"Add app"**
+2. Select **"Android"**
+3. Enter app name: Block Blast
+4. Note your **App ID**: `ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX`
 
 ### Step 3: Create Ad Units
 
 #### Banner Ad:
-1. Go to **Ad units** → **Add ad unit**
-2. Select **Banner**
-3. Name: "Block Blast Banner"
-4. Copy the **Ad unit ID**
+1. **Ad units** → **Add ad unit** → **Banner**
+2. Name: "Block Blast Banner"
+3. Copy the Ad unit ID
 
 #### Interstitial Ad:
-1. Click **Add ad unit** again
-2. Select **Interstitial**
-3. Name: "Block Blast Interstitial"
-4. Copy the **Ad unit ID**
+1. **Add ad unit** → **Interstitial**
+2. Name: "Block Blast Interstitial"
+3. Copy the Ad unit ID
 
-### Step 4: Install React Native Google Mobile Ads
+#### Rewarded Ad:
+1. **Add ad unit** → **Rewarded**
+2. Name: "Block Blast Rewarded"
+3. Reward: 25 coins
+4. Copy the Ad unit ID
 
-```bash
-npm install react-native-google-mobile-ads
-cd ios && pod install && cd ..
+### Step 4: Configure Environment
+
+Add to your `.env` file:
+
+```env
+VITE_ADMOB_ENABLED=true
+VITE_ADMOB_APP_ID=ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX
+VITE_ADMOB_BANNER_ID=ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX
+VITE_ADMOB_INTERSTITIAL_ID=ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX
+VITE_ADMOB_REWARDED_ID=ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX
 ```
 
-### Step 5: Configure app.json
+### Step 5: Update AndroidManifest.xml
 
-```json
-{
-  "react-native-google-mobile-ads": {
-    "android_app_id": "ca-app-pub-xxxxx~xxxxx",
-    "ios_app_id": "ca-app-pub-xxxxx~xxxxx",
-    "delay_app_measurement_init": true
-  }
-}
+Add your App ID to `android/app/src/main/AndroidManifest.xml`:
+
+```xml
+<application>
+    <meta-data
+        android:name="com.google.android.gms.ads.APPLICATION_ID"
+        android:value="ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX"/>
+</application>
 ```
 
-### Step 6: Initialize in App
+---
 
-Edit `/src/App.tsx`:
+## 🧪 Test Ad Unit IDs
 
-```typescript
-import mobileAds from 'react-native-google-mobile-ads';
+Use these official Google test IDs during development:
 
-function App() {
-  useEffect(() => {
-    mobileAds()
-      .initialize()
-      .then(adapterStatuses => {
-        console.log('AdMob initialized');
-      });
-  }, []);
+```env
+# Test App ID
+VITE_ADMOB_APP_ID=ca-app-pub-3940256099942544~3347511713
 
-  // ... rest of your app
-}
+# Test Ad Unit IDs
+VITE_ADMOB_BANNER_ID=ca-app-pub-3940256099942544/6300978111
+VITE_ADMOB_INTERSTITIAL_ID=ca-app-pub-3940256099942544/1033173712
+VITE_ADMOB_REWARDED_ID=ca-app-pub-3940256099942544/5224354917
 ```
 
-### Step 7: Update AdBanner Component
-
-Edit `/src/components/ads/AdBanner.tsx`:
-
-1. **Uncomment lines 151-181** (AdMob component)
-2. **Replace line 162** with your Banner ad unit ID:
-```typescript
-const adUnitId = __DEV__
-  ? TestIds.BANNER
-  : 'ca-app-pub-1234567890123456/1234567890'; // Your banner ad unit ID
-```
-3. **Uncomment line 76**:
-```typescript
-<AdMobBannerAd onAdLoaded={() => setAdLoaded(true)} />
-```
-
-### Step 8: Setup Interstitial Ads
-
-Edit `/src/components/ads/AdInterstitial.tsx`:
-
-1. **Uncomment lines 52-92** (AdMob interstitial code)
-2. **Replace line 59** with your Interstitial ad unit ID
-3. **Initialize in App.tsx**:
-
-```typescript
-import { initializeInterstitialAd } from './components/ads/AdInterstitial';
-
-function App() {
-  useEffect(() => {
-    initializeInterstitialAd();
-  }, []);
-}
-```
-
-### Step 9: Test with Test IDs
-
-Use these test IDs during development:
-
-**Android:**
-- Banner: `ca-app-pub-3940256099942544/6300978111`
-- Interstitial: `ca-app-pub-3940256099942544/1033173712`
-
-**iOS:**
-- Banner: `ca-app-pub-3940256099942544/2934735716`
-- Interstitial: `ca-app-pub-3940256099942544/4411468910`
-
-### Step 10: Build and Test
-
-```bash
-# Android
-npx react-native run-android
-
-# iOS
-npx react-native run-ios
-```
+**⚠️ NEVER use production ad IDs during development!**
 
 ---
 
 ## 🎮 Ad Placement Strategy
 
-### Banner Ads (Always Visible)
-- ✅ Bottom of game screen
-- ✅ Automatically hidden for premium users
-- ✅ Closeable by user
+### Banner Ads
+- **Location**: Bottom of game screen
+- **When**: Always visible during gameplay
+- **Behavior**: Hidden for premium users
 
-### Interstitial Ads (Full Screen)
-Show at these moments:
-- ✅ After game over (every 3 games)
-- ✅ After completing a level
-- ✅ When starting a new level
-- ✅ After watching tutorial
+### Interstitial Ads
+- **When to show**:
+  - After game over (every 3 games)
+  - After completing a level
+  - At natural break points
+- **Frequency limit**: Max 1 per minute
+- **Session limit**: Max 10 per session
+
+### Rewarded Ads
+- **When**: User-initiated (Watch Ad for Coins button)
+- **Reward**: 25 coins for watching complete ad
+- **Note**: Available to all users (including premium)
 
 ### When NOT to Show Ads
-- ❌ Premium users (Premium Pass active)
-- ❌ During active gameplay
-- ❌ On first game (bad UX)
-- ❌ More than once per minute
+
+❌ During active gameplay
+❌ To premium users (except rewarded)
+❌ On first game (bad UX)
+❌ More than once per minute
+❌ Right after app launch
 
 ---
 
-## 💰 Monetization Strategy
+## 💡 Implementation Details
 
-### Free Users
-- Banner ads on all screens
-- Interstitial ads every 3 games
-- Can purchase Premium Pass to remove ads
+### Initialize AdMob
 
-### Premium Users ($4.99/month)
-- **No ads** (all ad components automatically hide)
-- 2x coin rewards
-- Exclusive pieces
-- Daily bonus
+```typescript
+// src/services/ads.ts
+import { Capacitor } from '@capacitor/core';
 
-### Revenue Optimization
-1. **Ad Frequency**: Show interstitials every 3-5 games
-2. **Placement**: Banner at bottom (doesn't block gameplay)
-3. **Timing**: Show ads after natural breaks (game over, level complete)
-4. **Premium Upsell**: Offer ad removal + benefits in Premium Pass
+export const initializeAds = async () => {
+  if (!Capacitor.isNativePlatform()) {
+    console.log('AdMob only works on native platforms');
+    return false;
+  }
+
+  // Initialize AdMob SDK
+  // await AdMob.initialize();
+  
+  return true;
+};
+```
+
+### Show Banner Ad
+
+```typescript
+export const showBanner = async () => {
+  if (!shouldShowAds()) return false;
+
+  // await AdMob.showBanner({
+  //   adId: 'ca-app-pub-XXX/XXX',
+  //   adSize: BannerAdSize.ADAPTIVE_BANNER,
+  //   position: BannerAdPosition.BOTTOM_CENTER,
+  // });
+
+  return true;
+};
+```
+
+### Show Interstitial Ad
+
+```typescript
+export const showInterstitial = async () => {
+  if (!shouldShowAds()) return false;
+
+  // Check cooldown
+  const now = Date.now();
+  if (now - lastInterstitialTime < 60000) {
+    return false; // 1 minute cooldown
+  }
+
+  // await AdMob.showInterstitial();
+  lastInterstitialTime = now;
+  
+  return true;
+};
+```
+
+### Show Rewarded Ad
+
+```typescript
+export const showRewardedAd = async (onReward) => {
+  // await AdMob.showRewardedAd({
+  //   adId: 'ca-app-pub-XXX/XXX',
+  // });
+
+  // When user completes watching
+  onReward({ type: 'coins', amount: 25 });
+  
+  return true;
+};
+```
 
 ---
 
-## 📊 Expected Revenue (Estimates)
+## 📊 Revenue Optimization
 
-### AdMob CPM (Cost Per 1000 Impressions)
-- **Banner Ads**: $0.50 - $3.00
-- **Interstitial Ads**: $5.00 - $15.00
+### Maximize Revenue
 
-### Example: 10,000 Daily Active Users
-- 100,000 daily game sessions
-- 50,000 banner impressions = $25 - $150/day
-- 10,000 interstitial impressions = $50 - $150/day
-- **Total: $75 - $300/day** ($2,250 - $9,000/month)
+1. **Rewarded ads have highest CPM** - Encourage users to watch for rewards
+2. **Limit interstitial frequency** - Don't frustrate users
+3. **Smart placement** - Show ads at natural break points
+4. **A/B test** - Try different frequencies
 
-### Premium Pass Revenue
-- 2% conversion rate = 200 users
-- $4.99/month × 200 = **$998/month**
+### Expected Revenue
 
-### Combined: **$3,000 - $10,000/month** potential
+With **10,000 Daily Active Users**:
 
----
+| Ad Type | Impressions/Day | CPM | Revenue/Day |
+|---------|-----------------|-----|-------------|
+| Banner | 50,000 | $1.50 | $75 |
+| Interstitial | 10,000 | $8.00 | $80 |
+| Rewarded | 5,000 | $20.00 | $100 |
+| **Total** | | | **$255/day** |
 
-## 🧪 Testing Checklist
-
-- [ ] Ads load correctly
-- [ ] Ads don't show for premium users
-- [ ] Ads respect user's "Do Not Track" settings
-- [ ] Interstitials don't show too frequently
-- [ ] Ad close button works
-- [ ] Game continues after interstitial closes
-- [ ] No performance issues with ads
-- [ ] GDPR/CCPA compliance (if applicable)
+**Monthly**: ~$7,650 from ads alone
 
 ---
 
 ## 🔒 Privacy & Compliance
 
-### GDPR (Europe)
-If targeting EU users:
-1. Use Google's Consent Management Platform (CMP)
-2. Request user consent before showing personalized ads
-3. Allow users to opt-out
+### GDPR (European Users)
+
+1. Get consent before showing personalized ads
+2. Offer option for non-personalized ads
+3. Use Google's User Messaging Platform (UMP)
 
 ```typescript
-// In AdMob configuration
-requestOptions: {
-  requestNonPersonalizedAdsOnly: !userHasConsented
+// Check for consent
+const consentStatus = await UMP.getConsentStatus();
+if (consentStatus === 'REQUIRED') {
+  await UMP.showConsentForm();
 }
 ```
 
-### COPPA (USA - Children's Apps)
-If app is for children under 13:
-```typescript
-requestOptions: {
-  tagForChildDirectedTreatment: true
-}
-```
+### Data Safety (Google Play)
 
-### Add Privacy Policy
-Create `/public/privacy-policy.html` with:
-- What data you collect
-- How ads use data
-- User's rights
-- Contact information
+Complete the Data Safety form in Play Console:
+- Declare what data your app collects
+- Explain how ads use device identifiers
+- Disclose data sharing with Google
 
 ---
 
-## 🚀 Going Live
+## ✅ Pre-Launch Checklist
 
-### Before Launch Checklist
-1. ✅ Replace ALL test ad IDs with production IDs
-2. ✅ Test on real devices (not emulator)
-3. ✅ Verify premium users see no ads
-4. ✅ Add privacy policy link
-5. ✅ Submit app for AdMob review
-6. ✅ Wait 24-48 hours for ads to start serving
-
-### After Launch
-1. Monitor AdMob dashboard for metrics
-2. Adjust ad frequency based on user retention
-3. A/B test different ad placements
-4. Track premium conversion rate
+- [ ] Replace test ad IDs with production IDs
+- [ ] App ID added to AndroidManifest.xml
+- [ ] Premium users don't see ads
+- [ ] Interstitial frequency limits working
+- [ ] Rewarded ads grant coins correctly
+- [ ] Privacy policy mentions ad networks
+- [ ] Data Safety form completed
+- [ ] Tested on real device (not emulator)
 
 ---
 
-## 📞 Support & Resources
+## 🆘 Troubleshooting
 
-### Official Documentation
-- [Google AdSense](https://support.google.com/adsense)
-- [Google AdMob](https://support.google.com/admob)
-- [React Native Google Mobile Ads](https://docs.page/invertase/react-native-google-mobile-ads)
+### Ads Not Showing
 
-### Need Help?
-- Check AdMob dashboard for error messages
-- Review ad approval status
-- Ensure app complies with AdMob policies
+1. **Check App ID** - Must be in AndroidManifest.xml
+2. **Check Ad Unit IDs** - Must match exactly
+3. **Wait 24-48 hours** - New ad units need time
+4. **Use signed builds** - Debug builds may not work
+5. **Check AdMob dashboard** - Look for errors
 
----
+### Common Errors
 
-## 🎯 Quick Start Summary
+**"The ad request was successful, but no ad was returned"**
+- Normal during testing
+- Low fill rate in your region
+- Try again later
 
-**For Web (AdSense):**
-```bash
-1. Sign up at google.com/adsense
-2. Add script to index.html
-3. Update AdBanner.tsx with your IDs
-4. Deploy and test
-```
+**"Ad failed to load: 3"**
+- No fill - try again later
+- Check internet connection
+- Verify ad unit ID
 
-**For Mobile (AdMob):**
-```bash
-1. Sign up at admob.google.com
-2. npm install react-native-google-mobile-ads
-3. Configure app.json
-4. Update ad components with your IDs
-5. Build and test on device
-```
+**"Ad failed to load: 0"**
+- Internal error
+- Update Google Play Services
+- Check AdMob dashboard
 
 ---
 
-**Your game is now ad-ready! 🎉**
+## 📚 Resources
+
+- **AdMob Help**: https://support.google.com/admob
+- **AdMob Policies**: https://support.google.com/admob/answer/6128543
+- **Mobile Ads SDK**: https://developers.google.com/admob/android/quick-start
+- **UMP SDK**: https://developers.google.com/admob/ump/android/quick-start
+
+---
+
+## 🎉 Summary
+
+1. **Sign up** at apps.admob.com
+2. **Create ad units** (Banner, Interstitial, Rewarded)
+3. **Configure** App ID and Ad Unit IDs
+4. **Test** with test IDs first
+5. **Replace** with production IDs before launch
+6. **Submit** to Google Play
+
+**Your game is now monetized with AdMob! 💰🎮**

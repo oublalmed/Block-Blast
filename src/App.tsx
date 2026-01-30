@@ -1,3 +1,14 @@
+/**
+ * Block Blast - Main Application
+ * 
+ * A mobile game monetized via:
+ * - Google Play Billing (in-app purchases)
+ * - Google AdMob (advertisements)
+ * 
+ * NO external payment systems (Stripe, PayPal) are used.
+ * This ensures full Google Play Store compliance.
+ */
+
 import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { HomeScreen } from './screens/HomeScreen';
@@ -8,8 +19,11 @@ import { AchievementsScreen } from './screens/AchievementsScreen';
 import { AchievementUnlocked, useAchievementNotifications } from './components/ui/AchievementUnlocked';
 import { useGameStore } from './store/gameStore';
 import { getLevelData } from './utils/gameLogic';
-import { initializeAdSense, initializeAnalytics } from './services/ads';
-import { REVENUE_TRACKING } from './config/payment';
+
+// Services
+import { initializeAds, initializeAnalytics, setPremiumUser } from './services/ads';
+import { initializeBilling, hasPremium, restorePurchases } from './services/billing';
+import { ANALYTICS_CONFIG } from './config/payment';
 
 type Screen = 'home' | 'game' | 'level' | 'shop' | 'challenges' | 'challenge' | 'achievements';
 
@@ -23,22 +37,82 @@ interface GameConfig {
 function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [gameConfig, setGameConfig] = useState<GameConfig>({ mode: 'quick' });
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  const { completeLevel, completeDailyChallenge, dailyChallenges, checkAndUnlockAchievements } = useGameStore();
+  const { 
+    completeLevel, 
+    completeDailyChallenge, 
+    dailyChallenges, 
+    checkAndUnlockAchievements,
+    premiumPass,
+    activatePremiumPass,
+    initializeDailyChallenges,
+  } = useGameStore();
+  
   const { currentAchievement, showMultipleAchievements, closeNotification } = useAchievementNotifications();
 
-  // Initialize monetization services on app load
+  /**
+   * Initialize monetization services on app load
+   * 
+   * Order of initialization:
+   * 1. Google Play Billing - to check premium status
+   * 2. Google AdMob - initialized based on premium status
+   * 3. Google Analytics - for tracking
+   */
   useEffect(() => {
-    // Initialize Google AdSense for ad revenue
-    initializeAdSense();
+    const initializeApp = async () => {
+      console.log('🚀 Initializing Block Blast...');
 
-    // Initialize Google Analytics for revenue tracking
-    if (REVENUE_TRACKING.enabled && REVENUE_TRACKING.ga4MeasurementId) {
-      initializeAnalytics(REVENUE_TRACKING.ga4MeasurementId);
-    }
+      try {
+        // 1. Initialize Google Play Billing
+        console.log('💳 Initializing Google Play Billing...');
+        await initializeBilling();
+        
+        // 2. Restore purchases and check premium status
+        console.log('🔄 Checking purchase history...');
+        await restorePurchases();
+        
+        // If user has premium from Google Play, activate it
+        if (hasPremium() && !premiumPass.active) {
+          activatePremiumPass();
+        }
 
-    console.log('💰 Monetization services initialized');
+        // 3. Initialize Google AdMob
+        // Premium users won't see ads, but we still initialize
+        console.log('📺 Initializing Google AdMob...');
+        await initializeAds();
+        
+        // Set premium status in ads service
+        setPremiumUser(premiumPass.active);
+
+        // 4. Initialize Google Analytics (optional)
+        if (ANALYTICS_CONFIG.enabled && ANALYTICS_CONFIG.measurementId) {
+          console.log('📊 Initializing Google Analytics...');
+          initializeAnalytics(ANALYTICS_CONFIG.measurementId);
+        }
+
+        // 5. Initialize daily challenges and bonus
+        initializeDailyChallenges();
+
+        console.log('✅ Block Blast initialized successfully!');
+        console.log(`👑 Premium status: ${premiumPass.active ? 'Active' : 'Free user'}`);
+        
+      } catch (error) {
+        console.error('❌ Initialization error:', error);
+      } finally {
+        setIsInitialized(true);
+      }
+    };
+
+    initializeApp();
   }, []);
+
+  // Update ad service when premium status changes
+  useEffect(() => {
+    if (isInitialized) {
+      setPremiumUser(premiumPass.active);
+    }
+  }, [premiumPass.active, isInitialized]);
 
   // Check for achievements periodically (when returning to home screen)
   useEffect(() => {
@@ -48,7 +122,7 @@ function App() {
         showMultipleAchievements(newAchievements);
       }
     }
-  }, [currentScreen]);
+  }, [currentScreen, checkAndUnlockAchievements, showMultipleAchievements]);
 
   const handleStartQuickGame = () => {
     setGameConfig({ mode: 'quick' });
@@ -172,6 +246,23 @@ function App() {
         />;
     }
   };
+
+  // Show loading screen while initializing
+  if (!isInitialized) {
+    return (
+      <div className="app-container flex items-center justify-center min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
+        <motion.div
+          className="text-center"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+        >
+          <div className="text-6xl mb-4">🎮</div>
+          <div className="text-white font-bold text-xl mb-2">Block Blast</div>
+          <div className="text-white/60 text-sm">Loading...</div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="app-container">

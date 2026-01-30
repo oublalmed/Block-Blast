@@ -1,12 +1,24 @@
-# 🎮 Block Blast - Professional Mobile Game
+# 🎮 Block Blast - Mobile Game for Google Play
 
-A fully-featured, mobile-optimized Block Blast game built with React, TypeScript, and Tailwind CSS. **Ready to generate real revenue** through Stripe payments and Google AdSense!
+A fully-featured, mobile-optimized Block Blast game built with React, TypeScript, and Capacitor. **100% Google Play compliant** with Google Play Billing and Google AdMob integration.
 
 ![Block Blast Game](https://img.shields.io/badge/Game-Block%20Blast-blue)
-![React](https://img.shields.io/badge/React-18-blue)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-blue)
-![Monetization](https://img.shields.io/badge/Monetization-Ready-green)
+![Platform](https://img.shields.io/badge/Platform-Android-green)
+![React](https://img.shields.io/badge/React-19-blue)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)
+![Google Play](https://img.shields.io/badge/Google%20Play-Compliant-success)
+
+---
+
+## 🎯 Google Play Compliance
+
+This app is **100% compliant** with Google Play Store policies:
+
+- ✅ **Payments**: Google Play Billing only (no Stripe, PayPal, or external payments)
+- ✅ **Advertisements**: Google AdMob only (no AdSense)
+- ✅ **No external checkout links**
+- ✅ **Proper purchase restoration**
+- ✅ **GDPR/privacy compliant ad consent**
 
 ---
 
@@ -28,101 +40,204 @@ A fully-featured, mobile-optimized Block Blast game built with React, TypeScript
 - **Best Score Tracking** - Personal records and statistics
 - **Coin Economy** - Earn and spend coins on power-ups
 
-### 💎 Premium Features
-- **Premium Pass** ($3.99) - One-time purchase via Stripe
-  - ✅ Remove all ads
-  - ✅ 2x coin rewards
-  - ✅ Exclusive block designs
-  - ✅ Daily bonus coins
-  - ✅ Early access to new features
+### 💎 Premium Pack ($3.99 via Google Play)
+One-time purchase (non-consumable):
+- ✅ Remove ALL advertisements permanently
+- ✅ 2x coin rewards on all games
+- ✅ Exclusive block designs
+- ✅ 100 bonus coins daily
+- ✅ Early access to new features
 
-### 💰 Monetization (Ready to Use!)
-- **Stripe Payments** - Accept real credit card payments
-- **Google AdSense** - Display ads and earn revenue
-- **Google Analytics 4** - Track revenue and conversions
-- **Revenue Dashboard** - Monitor earnings in real-time
+### 💰 Monetization
 
-### 📱 Mobile Optimization
-- **Fully Responsive** - Optimized for all screen sizes
-- **Touch-Optimized** - Large touch targets and gestures
-- **PWA Ready** - Installable as a mobile app
-- **Offline Support** - Play without internet connection
-- **Safe Area Support** - iPhone notch and navigation bar friendly
+#### Google Play Billing (In-App Purchases)
+All purchases are handled through Google Play Billing:
 
-### 🎨 User Interface
-- **Modern Design** - Glassmorphism and gradient effects
-- **Smooth Animations** - Framer Motion powered transitions
-- **Dark Theme** - Beautiful dark mode design
-- **Visual Feedback** - Particle effects and celebrations
-- **Professional Polish** - Production-ready UI/UX
+| Product ID | Type | Description |
+|------------|------|-------------|
+| `premium_pack` | Non-consumable | Premium Pack - removes ads, 2x coins |
+| `coins_100` | Consumable | 100 Coins |
+| `coins_500` | Consumable | 500 Coins (Popular) |
+| `coins_1200` | Consumable | 1200 Coins (Best Value) |
+
+#### Google AdMob (Advertisements)
+Three ad formats for non-premium users:
+
+| Ad Type | When Shown | Reward |
+|---------|------------|--------|
+| Banner | During gameplay | N/A |
+| Interstitial | Every 3 games | N/A |
+| Rewarded | User-initiated | 25 coins |
+
+**Premium users see NO ADS.**
 
 ---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ installed
-- npm or yarn package manager
+- Node.js 18+
+- Android Studio (for Android builds)
+- Google Play Developer Account (for publishing)
 
 ### Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/Block-Blast.git
-   cd Block-Blast
-   ```
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/Block-Blast.git
+cd Block-Blast
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+# Install dependencies
+npm install
 
-3. **Start development server**
-   ```bash
-   npm run dev
-   ```
+# Start development server
+npm run dev
+```
 
-4. **Open in browser**
-   ```
-   http://localhost:5173
-   ```
+### Android Build
+
+```bash
+# Build and sync with Android
+npm run android:sync
+
+# Open in Android Studio
+npm run android
+
+# Build release APK
+npm run android:build
+```
 
 ---
 
-## 💵 Monetization Setup
+## 💳 Google Play Billing Setup
 
-Your game is **ready to generate real revenue**! Follow these guides to configure payments and ads:
+### 1. Create Products in Google Play Console
 
-### Quick Setup (3 Steps)
+1. Go to **Play Console** → Your App → **Monetize** → **Products** → **In-app products**
+2. Create products with these **exact** IDs:
+   - `premium_pack` (Non-consumable)
+   - `coins_100` (Consumable)
+   - `coins_500` (Consumable)
+   - `coins_1200` (Consumable)
+3. Set pricing for each product
+4. **Activate** the products
 
-1. **Create accounts** (free)
-   - Stripe: https://stripe.com
-   - Google AdSense: https://google.com/adsense
-   - Google Analytics: https://analytics.google.com
+### 2. Configure Android App
 
-2. **Get your API keys** and create `.env` file:
-   ```bash
-   cp .env.example .env
-   ```
+The billing integration is ready to use. Just ensure your app is:
+- Signed with your release keystore
+- Uploaded to Google Play (internal testing is fine)
+- Licensed testers are added
 
-3. **Fill in your keys** in `.env`:
-   ```env
-   VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_key
-   VITE_ADSENSE_CLIENT_ID=ca-pub-your_id
-   VITE_GA4_MEASUREMENT_ID=G-your_id
-   ```
+### 3. Testing Purchases
 
-### 📚 Detailed Guides
+1. Add test accounts in Play Console → **Setup** → **License testing**
+2. Use signed builds only (debug builds won't work)
+3. Test purchases are free and don't charge real money
 
-- **🇫🇷 French Guide**: [`GUIDE_RAPIDE_FR.md`](./GUIDE_RAPIDE_FR.md)
-- **🇬🇧 English Guide**: [`MONETIZATION_SETUP.md`](./MONETIZATION_SETUP.md)
+---
 
-Both guides include:
-- ✅ Step-by-step account creation
-- ✅ API key configuration
-- ✅ Testing with test cards
-- ✅ Going live checklist
-- ✅ Troubleshooting tips
+## 📺 Google AdMob Setup
+
+### 1. Create AdMob Account
+
+1. Go to [apps.admob.com](https://apps.admob.com)
+2. Create an account
+3. Add your Android app (use package name from `capacitor.config.ts`)
+
+### 2. Create Ad Units
+
+Create these ad units:
+- **Banner** - For gameplay screen
+- **Interstitial** - For between levels
+- **Rewarded** - For earning coins
+
+### 3. Configure Ad IDs
+
+1. Copy `.env.example` to `.env`
+2. Replace test IDs with your actual ad unit IDs:
+
+```env
+VITE_ADMOB_APP_ID=ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX
+VITE_ADMOB_BANNER_ID=ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX
+VITE_ADMOB_INTERSTITIAL_ID=ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX
+VITE_ADMOB_REWARDED_ID=ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX
+```
+
+### 4. Add App ID to AndroidManifest.xml
+
+```xml
+<meta-data
+    android:name="com.google.android.gms.ads.APPLICATION_ID"
+    android:value="ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX"/>
+```
+
+### Test Ad IDs (Development Only)
+
+Use these Google test IDs during development:
+- App ID: `ca-app-pub-3940256099942544~3347511713`
+- Banner: `ca-app-pub-3940256099942544/6300978111`
+- Interstitial: `ca-app-pub-3940256099942544/1033173712`
+- Rewarded: `ca-app-pub-3940256099942544/5224354917`
+
+---
+
+## 🛠️ Project Structure
+
+```
+Block-Blast/
+├── src/
+│   ├── components/       # React components
+│   │   ├── ads/         # AdMob components
+│   │   ├── game/        # Game components
+│   │   └── ui/          # UI components
+│   ├── screens/         # Screen components
+│   ├── services/        
+│   │   ├── billing.ts   # Google Play Billing
+│   │   └── ads.ts       # Google AdMob
+│   ├── store/           # Zustand state management
+│   ├── types/           # TypeScript definitions
+│   ├── utils/           # Utility functions
+│   └── config/
+│       └── payment.ts   # Billing & AdMob config
+├── android/             # Android native code
+└── public/              # Static assets
+```
+
+---
+
+## 📱 Tech Stack
+
+- **Framework**: React 19 + TypeScript
+- **Build Tool**: Vite 7
+- **Mobile**: Capacitor 8
+- **Styling**: Tailwind CSS 3.4
+- **Animations**: Framer Motion
+- **State Management**: Zustand with persist
+- **Payments**: Google Play Billing
+- **Ads**: Google AdMob
+
+---
+
+## 🔒 Privacy & Compliance
+
+### Required for Google Play
+
+1. **Privacy Policy** - Disclose data collection
+2. **Data Safety** - Complete the form in Play Console
+3. **Ad Consent** - Required for EU users (GDPR)
+4. **Target Audience** - Set appropriate content rating
+
+### No External Payment Systems
+
+This app does **NOT** use:
+- ❌ Stripe
+- ❌ PayPal
+- ❌ External payment links
+- ❌ Web checkout
+- ❌ AdSense (web-only)
+
+All monetization goes through Google Play's official systems.
 
 ---
 
@@ -144,230 +259,72 @@ Both guides include:
 
 ---
 
-## 🛠️ Development
-
-### Project Structure
-
-```
-Block-Blast/
-├── src/
-│   ├── components/       # React components
-│   │   ├── ads/         # Ad components (AdSense)
-│   │   ├── game/        # Game components (Board, Pieces, etc.)
-│   │   └── ui/          # UI components (Headers, Modals, etc.)
-│   ├── screens/         # Screen components
-│   ├── services/        # External services (Stripe, Ads, etc.)
-│   ├── store/          # Zustand state management
-│   ├── types/          # TypeScript type definitions
-│   ├── utils/          # Utility functions
-│   └── config/         # Configuration files
-├── public/             # Static assets
-└── docs/              # Documentation
-```
-
-### Available Scripts
-
-```bash
-# Development
-npm run dev          # Start dev server with hot reload
-
-# Production
-npm run build        # Build for production
-npm run preview      # Preview production build
-
-# Code Quality
-npm run lint         # Run ESLint
-npm run type-check   # Run TypeScript compiler
-```
-
-### Tech Stack
-
-- **Framework**: React 18 + TypeScript
-- **Build Tool**: Vite 7
-- **Styling**: Tailwind CSS 3.4
-- **Animations**: Framer Motion
-- **State Management**: Zustand with persist
-- **Payments**: Stripe
-- **Ads**: Google AdSense
-- **Analytics**: Google Analytics 4
-
----
-
-## 🚢 Deployment
-
-### Deploy to Vercel (Recommended)
-
-1. Push code to GitHub
-2. Import project in Vercel
-3. Add environment variables:
-   ```
-   VITE_STRIPE_PUBLISHABLE_KEY=pk_live_...
-   VITE_ADSENSE_CLIENT_ID=ca-pub-...
-   VITE_GA4_MEASUREMENT_ID=G-...
-   ```
-4. Deploy! 🚀
-
-### Deploy to Netlify
-
-1. Connect GitHub repository
-2. Build command: `npm run build`
-3. Publish directory: `dist`
-4. Add environment variables
-5. Deploy! 🚀
-
-### Other Hosting
-
-Build the project and serve the `dist` folder:
-```bash
-npm run build
-# Serve the dist/ folder with any static host
-```
-
----
-
-## 💰 Revenue Streams
-
-Your game has **3 revenue streams**:
-
-### 1. Premium Pass ($3.99)
-- One-time purchase via Stripe
-- Removes ads permanently
-- Unlocks premium features
-- **You keep ~97%** of revenue (Stripe fees ~3%)
-
-### 2. Ad Revenue (Google AdSense)
-- Display banner ads to free users
-- Earn money per impression/click
-- **Typical CPM**: $0.50 - $5.00
-- **Monthly payments** when you reach $100
-
-### 3. Power-Up Purchases (Coming Soon)
-- Optional: Sell coin packs via Stripe
-- Already integrated, just need to enable
-- Additional revenue stream
-
-### Revenue Example
+## 📊 Revenue Potential
 
 With **10,000 daily active users**:
-- Premium conversions (2%): 200 × $3.99 = **$798/day**
-- Ad impressions (9,800 users): ~**$50-200/day**
-- **Potential**: $25k - $30k/month 💰
+
+| Source | Calculation | Revenue |
+|--------|-------------|---------|
+| Premium (2% conversion) | 200 × $3.99 | ~$800/day |
+| Coin Packs (1% conversion) | 100 × $2 avg | ~$200/day |
+| Ad Revenue | 8,000 impressions | ~$50-200/day |
+| **Total** | | **$1,000-1,200/day** |
 
 ---
 
-## 📊 Analytics & Tracking
+## 🚢 Publishing to Google Play
 
-Monitor your game's performance:
+### Pre-Launch Checklist
 
-### Stripe Dashboard
-- Real-time payment tracking
-- Revenue reports and exports
-- Customer management
-- https://dashboard.stripe.com
+- [ ] Replace test ad IDs with production IDs
+- [ ] Configure products in Play Console
+- [ ] Add testers for internal testing
+- [ ] Complete store listing
+- [ ] Add privacy policy
+- [ ] Complete data safety form
+- [ ] Set content rating
+- [ ] Create app signing key
+- [ ] Build release AAB/APK
 
-### Google AdSense
-- Ad performance metrics
-- Earnings reports
-- Optimization suggestions
-- https://adsense.google.com
+### Release Process
 
-### Google Analytics 4
-- User behavior tracking
-- Conversion funnels
-- Revenue attribution
-- Custom event tracking
-- https://analytics.google.com
+1. Build release: `npm run android:build`
+2. Upload to Play Console
+3. Start internal testing
+4. Graduate to production
 
 ---
 
-## 🎯 Roadmap
+## 🆘 Troubleshooting
 
-- [x] Core gameplay mechanics
-- [x] 50+ progressive levels
-- [x] Achievement system (30+ achievements)
-- [x] Power-ups (Undo, Hint, Bomb, Shuffle)
-- [x] Daily challenges
-- [x] Premium Pass
-- [x] Stripe payment integration
-- [x] Google AdSense integration
-- [x] Mobile-first responsive design
-- [x] PWA support
-- [ ] Leaderboards (global rankings)
-- [ ] Multiplayer mode
-- [ ] Social sharing
-- [ ] Custom themes
-- [ ] Seasonal events
-- [ ] More power-ups
+### Purchases Not Working?
 
----
+1. Ensure app is signed with release key
+2. Check products are active in Play Console
+3. Add test accounts to license testing
+4. Use internal test track, not debug builds
 
-## 📝 License & Legal
+### Ads Not Showing?
 
-### Before Going Live
+1. Check AdMob app ID in AndroidManifest.xml
+2. Verify ad unit IDs in .env file
+3. Wait 24-48 hours after creating new ad units
+4. Check AdMob dashboard for errors
 
-⚠️ **Required Legal Documents**:
-1. **Privacy Policy** - Required by law and AdSense
-2. **Terms of Service** - Required for payments
-3. **Refund Policy** - Required by Stripe
-4. **Cookie Policy** - Required for EU users (GDPR)
+### Build Errors?
 
-### Business Setup
-
-Consider:
-- Registering as a business (if required in your jurisdiction)
-- Setting up proper accounting for taxes
-- Consulting with a lawyer and accountant
-
-### Code License
-
-This project is for educational and commercial use. Modify and monetize as you wish!
+```bash
+# Clear and rebuild
+rm -rf node_modules android/app/build
+npm install
+npm run android:sync
+```
 
 ---
 
-## 🆘 Support & Help
+## 📝 License
 
-### Documentation
-- 📖 [Monetization Guide (English)](./MONETIZATION_SETUP.md)
-- 📖 [Guide de Monétisation (Français)](./GUIDE_RAPIDE_FR.md)
-
-### External Resources
-- **Stripe Docs**: https://stripe.com/docs
-- **AdSense Help**: https://support.google.com/adsense
-- **GA4 Help**: https://support.google.com/analytics
-- **React Docs**: https://react.dev
-- **Tailwind Docs**: https://tailwindcss.com
-
-### Common Issues
-
-**Ads not showing?**
-- Check that `VITE_ADSENSE_ENABLED=true`
-- Wait 24-48 hours after creating ad units
-- Ensure AdSense account is approved
-
-**Payment not working?**
-- Verify Stripe keys are correct
-- Check that payment link URL is set
-- Use test cards for testing
-
-**Build errors?**
-- Run `npm install` to update dependencies
-- Clear cache: `rm -rf node_modules .cache dist`
-- Reinstall: `npm install`
-
----
-
-## 🎉 Success Stories
-
-Ready to launch your own Block Blast game and start earning? You have everything you need:
-
-✅ Professional, mobile-optimized game
-✅ Real payment processing via Stripe
-✅ Ad revenue via Google AdSense
-✅ Complete analytics and tracking
-✅ PWA support for mobile installation
-✅ Production-ready code
-
-**Start earning today! 💰🎮🚀**
+This project is for commercial use. Modify and monetize as you wish!
 
 ---
 
@@ -375,21 +332,15 @@ Ready to launch your own Block Blast game and start earning? You have everything
 
 Built with:
 - React + TypeScript
+- Capacitor
 - Tailwind CSS
 - Framer Motion
 - Zustand
-- Stripe
-- Google AdSense
-- Google Analytics 4
+- Google Play Billing
+- Google AdMob
 
 ---
 
-## 📧 Contact
+**Ready for Google Play! 🎮💰🚀**
 
-Questions or need help? Create an issue or reach out!
-
-**Happy Gaming and Happy Earning! 🎮💰**
-
----
-
-Made with ❤️ for game developers who want to monetize their passion
+Made with ❤️ for mobile game developers
