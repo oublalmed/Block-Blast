@@ -41,7 +41,7 @@ export const GameScreen = ({
     hint,
   } = useGame();
 
-  const { addCoins, premiumPass } = useGameStore();
+  const { addCoins, isPremium } = useGameStore();
 
   const [draggingPiece, setDraggingPiece] = useState<Piece | null>(null);
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
@@ -272,8 +272,8 @@ export const GameScreen = ({
         showHomeButton={!!onHome}
       />
 
-      {/* Ad Banner */}
-      {!premiumPass.active && <AdBanner position="bottom" />}
+      {/* Ad Banner - Hidden for premium users */}
+      {!isPremium && <AdBanner position="bottom" />}
     </div>
   );
 };

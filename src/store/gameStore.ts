@@ -4,7 +4,21 @@ import type { UserProgress, DailyChallenge } from '../types/game';
 import { ACHIEVEMENTS, type Achievement } from '../types/achievements';
 import type { PowerUpType } from '../types/powerups';
 
+/**
+ * Game Store
+ * 
+ * Zustand store with persistence for managing game state.
+ * 
+ * IMPORTANT: Premium status is managed through Google Play Billing.
+ * The `isPremium` flag is set when user purchases the premium_pack product.
+ * This flag persists locally but should be validated against Google Play
+ * on app startup via restorePurchases().
+ */
+
 interface GameStore extends UserProgress {
+  // Premium status (from Google Play Billing)
+  isPremium: boolean;
+  
   // Actions
   updateScore: (score: number) => void;
   addCoins: (amount: number) => void;
@@ -14,20 +28,27 @@ interface GameStore extends UserProgress {
   setCurrentLevel: (levelId: number) => void;
   completeDailyChallenge: (challengeId: string) => void;
   activatePremiumPass: () => void;
+  deactivatePremiumPass: () => void;
   incrementGamesPlayed: () => void;
   resetProgress: () => void;
   updateLastPlayedDate: () => void;
   initializeDailyChallenges: () => void;
+  
   // Achievements
   checkAndUnlockAchievements: () => Achievement[];
   unlockAchievement: (achievementId: string) => void;
   getAchievements: () => Achievement[];
   updateMaxCombo: (combo: number) => void;
   incrementPerfectClears: () => void;
+  
   // Power-ups
   buyPowerUp: (type: PowerUpType, quantity: number, cost: number) => boolean;
   usePowerUp: (type: PowerUpType) => boolean;
   addPowerUp: (type: PowerUpType, quantity: number) => void;
+  
+  // Google Play Billing helpers
+  handlePurchaseSuccess: (productId: string, coinAmount?: number) => void;
+  handleRestorePurchases: (ownedProducts: string[]) => void;
 }
 
 const generateDailyChallenges = (): DailyChallenge[] => {
@@ -72,13 +93,14 @@ const generateDailyChallenges = (): DailyChallenge[] => {
   return challenges;
 };
 
-const initialState: UserProgress = {
+const initialState: UserProgress & { isPremium: boolean } = {
   totalScore: 0,
   bestScore: 0,
   gamesPlayed: 0,
   currentLevel: 1,
   completedLevels: [],
   coins: 0,
+  isPremium: false,
   premiumPass: {
     active: false,
     benefits: {
@@ -119,7 +141,8 @@ export const useGameStore = create<GameStore>()(
 
       addCoins: (amount: number) => {
         set((state) => {
-          const multiplier = state.premiumPass.active ? 2 : 1;
+          // Premium users get 2x coins
+          const multiplier = state.isPremium ? 2 : 1;
           return {
             coins: state.coins + amount * multiplier,
           };
@@ -143,7 +166,8 @@ export const useGameStore = create<GameStore>()(
 
           // Reward coins based on stars
           const coinReward = stars * 50;
-          const multiplier = state.premiumPass.active ? 2 : 1;
+          // Premium users get 2x coins
+          const multiplier = state.isPremium ? 2 : 1;
 
           return {
             completedLevels,
@@ -171,7 +195,8 @@ export const useGameStore = create<GameStore>()(
 
           const challenge = state.dailyChallenges.find((c) => c.id === challengeId);
           const reward = challenge ? challenge.reward : 0;
-          const multiplier = state.premiumPass.active ? 2 : 1;
+          // Premium users get 2x coins
+          const multiplier = state.isPremium ? 2 : 1;
 
           return {
             dailyChallenges,
@@ -180,16 +205,21 @@ export const useGameStore = create<GameStore>()(
         });
       },
 
+      /**
+       * Activate Premium Pass
+       * Called when user successfully purchases premium_pack through Google Play Billing
+       * 
+       * IMPORTANT: This is a NON-CONSUMABLE purchase.
+       * The premium status should persist forever and be restored on reinstall.
+       */
       activatePremiumPass: () => {
-        const now = new Date();
-        const expiresAt = new Date(now);
-        expiresAt.setMonth(expiresAt.getMonth() + 1);
-
         set({
+          isPremium: true,
           premiumPass: {
             active: true,
-            purchaseDate: now,
-            expiresAt,
+            purchaseDate: new Date(),
+            // Non-consumable products don't expire
+            expiresAt: undefined,
             benefits: {
               noAds: true,
               doubleRewards: true,
@@ -198,6 +228,27 @@ export const useGameStore = create<GameStore>()(
             },
           },
         });
+        console.log('✅ Premium Pass activated via Google Play Billing');
+      },
+
+      /**
+       * Deactivate Premium Pass
+       * Should only be called if Google Play reports the purchase was refunded
+       */
+      deactivatePremiumPass: () => {
+        set({
+          isPremium: false,
+          premiumPass: {
+            active: false,
+            benefits: {
+              noAds: false,
+              doubleRewards: false,
+              exclusivePieces: false,
+              dailyBonus: false,
+            },
+          },
+        });
+        console.log('⚠️ Premium Pass deactivated');
       },
 
       incrementGamesPlayed: () => {
@@ -205,7 +256,14 @@ export const useGameStore = create<GameStore>()(
       },
 
       resetProgress: () => {
-        set(initialState);
+        // Keep premium status when resetting (it's tied to Google Play purchase)
+        const currentPremium = get().isPremium;
+        const currentPremiumPass = get().premiumPass;
+        set({
+          ...initialState,
+          isPremium: currentPremium,
+          premiumPass: currentPremiumPass,
+        });
       },
 
       updateLastPlayedDate: () => {
@@ -233,11 +291,19 @@ export const useGameStore = create<GameStore>()(
 
           const consecutiveDays = diffDays === 1 ? state.consecutiveDays + 1 : 1;
 
+          // Give daily bonus coins to premium users
+          const dailyBonus = state.isPremium ? 100 : 0;
+
           set({
             dailyChallenges: generateDailyChallenges(),
             lastPlayedDate: today,
             consecutiveDays,
+            coins: state.coins + dailyBonus,
           });
+
+          if (dailyBonus > 0) {
+            console.log('🎁 Premium daily bonus: +100 coins');
+          }
         }
       },
 
@@ -301,7 +367,7 @@ export const useGameStore = create<GameStore>()(
               if (achievement.id === 'first_game') {
                 shouldUnlock = state.gamesPlayed >= 1;
               } else if (achievement.id === 'premium_user') {
-                shouldUnlock = state.premiumPass.active;
+                shouldUnlock = state.isPremium;
               } else if (achievement.id.startsWith('daily_streak_')) {
                 shouldUnlock = state.consecutiveDays >= achievement.requirement;
               }
@@ -368,6 +434,42 @@ export const useGameStore = create<GameStore>()(
             [type]: state.powerUps[type] + quantity,
           },
         });
+      },
+
+      /**
+       * Handle successful purchase from Google Play Billing
+       * 
+       * @param productId - The product ID that was purchased
+       * @param coinAmount - For coin packs, the amount of coins to add
+       */
+      handlePurchaseSuccess: (productId: string, coinAmount?: number) => {
+        if (productId === 'premium_pack') {
+          // Activate premium (non-consumable)
+          get().activatePremiumPass();
+        } else if (coinAmount && coinAmount > 0) {
+          // Add coins (consumable) - don't apply premium multiplier here
+          // since they're buying, not earning
+          set((state) => ({
+            coins: state.coins + coinAmount,
+          }));
+          console.log(`✅ Added ${coinAmount} coins from purchase`);
+        }
+      },
+
+      /**
+       * Handle restored purchases from Google Play Billing
+       * Called on app startup to restore premium status
+       * 
+       * @param ownedProducts - Array of product IDs the user owns
+       */
+      handleRestorePurchases: (ownedProducts: string[]) => {
+        if (ownedProducts.includes('premium_pack')) {
+          const state = get();
+          if (!state.isPremium) {
+            get().activatePremiumPass();
+            console.log('✅ Premium status restored from Google Play');
+          }
+        }
       },
     }),
     {

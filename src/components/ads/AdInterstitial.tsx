@@ -1,78 +1,103 @@
-import { useEffect, useState } from 'react';
-import { useGameStore } from '../../store/gameStore';
-
 /**
- * AdInterstitial - Full Screen Ads
- *
- * Shows full-screen ads at strategic moments:
- * - After game over
+ * AdInterstitial Component - Google AdMob Integration
+ * 
+ * IMPORTANT: This component uses Google AdMob for native Android apps.
+ * Google AdSense is for web only and is NOT allowed on Google Play.
+ * 
+ * Shows full-screen interstitial ads at strategic moments:
+ * - After game over (every 3 games)
  * - After completing a level
- * - Every N games played
- *
- * === FOR WEB (Google AdSense) ===
- * Use AdSense for Games or custom implementation
- *
- * === FOR MOBILE APP (AdMob) ===
- * 1. Install: npm install react-native-google-mobile-ads
- * 2. Use InterstitialAd from the package
- * 3. Preload ads in advance for better UX
- *
- * === TEST IDS ===
- * - Interstitial (Android): ca-app-pub-3940256099942544/1033173712
- * - Interstitial (iOS): ca-app-pub-3940256099942544/4411468910
+ * 
+ * Premium users never see ads.
  */
 
+import { useEffect, useRef } from 'react';
+import { useGameStore } from '../../store/gameStore';
+import { 
+  showInterstitial, 
+  isInterstitialReady,
+  isNativeAndroid,
+} from '../../services/admob';
+import { ADMOB_CONFIG } from '../../config/payment';
+
 interface AdInterstitialProps {
+  /** Callback when ad is closed (or skipped for premium users) */
   onAdClosed?: () => void;
+  /** When to show the ad */
   trigger?: 'game-over' | 'level-complete' | 'manual';
 }
 
+/**
+ * AdInterstitial - Full Screen Ads via Google AdMob
+ * 
+ * Usage:
+ * ```tsx
+ * <AdInterstitial 
+ *   trigger="game-over" 
+ *   onAdClosed={() => console.log('Continue to next screen')} 
+ * />
+ * ```
+ */
 export const AdInterstitial = ({ onAdClosed, trigger }: AdInterstitialProps) => {
-  const { premiumPass, gamesPlayed } = useGameStore();
-  const [shouldShow, setShouldShow] = useState(false);
+  const { isPremium, gamesPlayed } = useGameStore();
+  const hasTriggered = useRef(false);
 
   useEffect(() => {
-    // Don't show ads to premium users
-    if (premiumPass.active) {
+    // Prevent multiple triggers
+    if (hasTriggered.current) {
       return;
     }
 
-    // Show ads every 3 games or on specific triggers
-    if (trigger === 'game-over' && gamesPlayed % 3 === 0) {
-      setShouldShow(true);
-    } else if (trigger === 'level-complete') {
-      setShouldShow(true);
-    } else if (trigger === 'manual') {
-      setShouldShow(true);
+    // Don't show ads to premium users
+    if (isPremium) {
+      // Still call the callback so the flow continues
+      onAdClosed?.();
+      return;
     }
-  }, [trigger, gamesPlayed, premiumPass.active]);
 
-  useEffect(() => {
-    if (shouldShow) {
-      // Load and show the ad
-      loadAndShowInterstitial();
+    const shouldShowAd = () => {
+      switch (trigger) {
+        case 'game-over':
+          // Show interstitial every N games (configurable)
+          return gamesPlayed > 0 && gamesPlayed % ADMOB_CONFIG.settings.interstitialFrequency === 0;
+        case 'level-complete':
+          // Show interstitial after level completion
+          return true;
+        case 'manual':
+          // Always show when manually triggered
+          return true;
+        default:
+          return false;
+      }
+    };
+
+    if (!shouldShowAd()) {
+      onAdClosed?.();
+      return;
     }
-  }, [shouldShow]);
 
-  const loadAndShowInterstitial = async () => {
+    hasTriggered.current = true;
+    showInterstitialAd();
+  }, [trigger, gamesPlayed, isPremium, onAdClosed]);
+
+  const showInterstitialAd = async () => {
     try {
-      // OPTION 1: Google AdSense (Web)
-      // Implement custom interstitial logic
-
-      // OPTION 2: AdMob (React Native)
-      // await showAdMobInterstitial();
-
-      // After ad is closed
-      handleAdClosed();
+      // Check if we're on native Android with AdMob available
+      if (isNativeAndroid() && isInterstitialReady()) {
+        console.log('📺 Showing interstitial ad...');
+        await showInterstitial();
+      } else {
+        console.log('📺 Interstitial ad not available, skipping');
+      }
     } catch (error) {
       console.error('Failed to show interstitial ad:', error);
-      handleAdClosed();
+    } finally {
+      // Always call the callback after ad is closed (or if ad failed)
+      // Small delay to ensure smooth transition
+      setTimeout(() => {
+        onAdClosed?.();
+      }, 300);
     }
-  };
-
-  const handleAdClosed = () => {
-    setShouldShow(false);
-    onAdClosed?.();
   };
 
   // This component doesn't render anything visible
@@ -81,101 +106,56 @@ export const AdInterstitial = ({ onAdClosed, trigger }: AdInterstitialProps) => 
 };
 
 // ============================================
-// ADMOB INTERSTITIAL (REACT NATIVE)
-// Uncomment when using in React Native app
+// USAGE EXAMPLES
 // ============================================
 
-/*
-import { InterstitialAd, AdEventType, TestIds } from 'react-native-google-mobile-ads';
+/**
+ * Example 1: Show ad after game over
+ * 
+ * ```tsx
+ * function GameOverModal({ isOpen, score, onPlayAgain }) {
+ *   const [showingAd, setShowingAd] = useState(false);
+ * 
+ *   const handlePlayAgain = () => {
+ *     setShowingAd(true);
+ *   };
+ * 
+ *   return (
+ *     <>
+ *       <Modal isOpen={isOpen && !showingAd}>
+ *         <h2>Game Over!</h2>
+ *         <p>Score: {score}</p>
+ *         <button onClick={handlePlayAgain}>Play Again</button>
+ *       </Modal>
+ * 
+ *       {showingAd && (
+ *         <AdInterstitial
+ *           trigger="game-over"
+ *           onAdClosed={() => {
+ *             setShowingAd(false);
+ *             onPlayAgain();
+ *           }}
+ *         />
+ *       )}
+ *     </>
+ *   );
+ * }
+ * ```
+ */
 
-let interstitialAd: InterstitialAd | null = null;
+/**
+ * Example 2: Show ad after completing a level
+ * 
+ * ```tsx
+ * function LevelComplete({ onNextLevel }) {
+ *   return (
+ *     <AdInterstitial
+ *       trigger="level-complete"
+ *       onAdClosed={onNextLevel}
+ *     />
+ *   );
+ * }
+ * ```
+ */
 
-export const initializeInterstitialAd = () => {
-  const adUnitId = __DEV__
-    ? TestIds.INTERSTITIAL
-    : 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX'; // Replace with your ad unit ID
-
-  interstitialAd = InterstitialAd.createForAdRequest(adUnitId, {
-    requestNonPersonalizedAdsOnly: false,
-  });
-
-  // Preload the ad
-  interstitialAd.load();
-
-  // Setup event listeners
-  interstitialAd.addAdEventListener(AdEventType.LOADED, () => {
-    console.log('Interstitial ad loaded');
-  });
-
-  interstitialAd.addAdEventListener(AdEventType.CLOSED, () => {
-    console.log('Interstitial ad closed');
-    // Preload next ad
-    interstitialAd?.load();
-  });
-};
-
-export const showAdMobInterstitial = async (): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    if (!interstitialAd) {
-      initializeInterstitialAd();
-    }
-
-    if (interstitialAd?.loaded) {
-      interstitialAd.show();
-
-      const unsubscribe = interstitialAd.addAdEventListener(
-        AdEventType.CLOSED,
-        () => {
-          unsubscribe();
-          resolve();
-        }
-      );
-    } else {
-      console.log('Interstitial ad not ready');
-      resolve();
-    }
-  });
-};
-
-// Call this when app starts
-// initializeInterstitialAd();
-*/
-
-// ============================================
-// USAGE EXAMPLE
-// ============================================
-
-/*
-// In GameOverModal or level complete screen:
-
-import { AdInterstitial } from './components/ads/AdInterstitial';
-
-function GameOverModal({ isOpen, score, onPlayAgain }) {
-  const [showingAd, setShowingAd] = useState(false);
-
-  const handlePlayAgain = () => {
-    // Show ad before restarting
-    setShowingAd(true);
-  };
-
-  return (
-    <>
-      <Modal isOpen={isOpen}>
-        <h2>Game Over!</h2>
-        <p>Score: {score}</p>
-        <button onClick={handlePlayAgain}>Play Again</button>
-      </Modal>
-
-      {showingAd && (
-        <AdInterstitial
-          trigger="game-over"
-          onAdClosed={() => {
-            setShowingAd(false);
-            onPlayAgain();
-          }}
-        />
-      )}
-    </>
-  );
-}
-*/
+export default AdInterstitial;

@@ -1,67 +1,83 @@
+/**
+ * AdBanner Component - Google AdMob Integration
+ * 
+ * IMPORTANT: This component uses Google AdMob for native Android apps.
+ * Google AdSense is for web only and is NOT allowed on Google Play.
+ * 
+ * The banner ad is shown via the native AdMob SDK through Capacitor.
+ * Premium users do not see any ads.
+ */
+
 import { motion } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, Crown } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
 import { useState, useEffect } from 'react';
-import { loadAd, trackAdImpression, getAdUnitConfig, shouldShowAds } from '../../services/ads';
+import { 
+  showBanner, 
+  hideBanner, 
+  isAdMobAvailable,
+  isNativeAndroid,
+} from '../../services/admob';
 
 interface AdBannerProps {
   position?: 'top' | 'bottom';
   onClose?: () => void;
 }
 
-/**
- * AdBanner Component - Production Ready
- *
- * INTEGRATION OPTIONS:
- *
- * === FOR WEB (Google AdSense) ===
- * 1. Get your AdSense publisher ID from https://www.google.com/adsense
- * 2. Add script to index.html:
- *    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
- *         crossorigin="anonymous"></script>
- * 3. Uncomment the GoogleAdSense component below
- *
- * === FOR MOBILE APP (React Native + AdMob) ===
- * 1. Install: npm install react-native-google-mobile-ads
- * 2. Configure in app.json:
- *    {
- *      "react-native-google-mobile-ads": {
- *        "android_app_id": "ca-app-pub-xxxxx~xxxxx",
- *        "ios_app_id": "ca-app-pub-xxxxx~xxxxx"
- *      }
- *    }
- * 3. Uncomment the AdMobBanner component below
- *
- * === TEST ADS ===
- * Use these IDs for testing:
- * - Banner (Android): ca-app-pub-3940256099942544/6300978111
- * - Banner (iOS): ca-app-pub-3940256099942544/2934735716
- */
-
 export const AdBanner = ({ position = 'bottom', onClose }: AdBannerProps) => {
-  const { premiumPass } = useGameStore();
+  const { isPremium } = useGameStore();
   const [isVisible, setIsVisible] = useState(true);
-  const [adLoaded, setAdLoaded] = useState(false);
+  const [adShown, setAdShown] = useState(false);
 
   // Don't show ads for premium users
-  if (!shouldShowAds(premiumPass.active) || !isVisible) {
+  const shouldShowAd = !isPremium && isVisible;
+
+  // Show/hide native banner ad
+  useEffect(() => {
+    if (shouldShowAd && isNativeAndroid() && isAdMobAvailable()) {
+      showBanner(position);
+      setAdShown(true);
+    }
+
+    return () => {
+      // Hide banner when component unmounts
+      if (adShown) {
+        hideBanner();
+      }
+    };
+  }, [shouldShowAd, position, adShown]);
+
+  // Handle premium status changes
+  useEffect(() => {
+    if (isPremium && adShown) {
+      hideBanner();
+      setAdShown(false);
+    }
+  }, [isPremium, adShown]);
+
+  // Don't render anything for premium users
+  if (isPremium) {
     return null;
   }
 
-  // Track ad impression when component mounts
-  useEffect(() => {
-    if (isVisible) {
-      trackAdImpression(position);
-    }
-  }, [isVisible, position]);
+  // Don't render if manually closed
+  if (!isVisible) {
+    return null;
+  }
 
   const handleClose = () => {
     setIsVisible(false);
+    if (adShown) {
+      hideBanner();
+      setAdShown(false);
+    }
     onClose?.();
   };
 
   const positionClasses = position === 'top' ? 'top-0' : 'bottom-0';
 
+  // On native Android, the actual ad is shown via the native SDK
+  // This component just provides a placeholder/fallback and close button
   return (
     <motion.div
       className={`
@@ -77,23 +93,15 @@ export const AdBanner = ({ position = 'bottom', onClose }: AdBannerProps) => {
       transition={{ duration: 0.3 }}
     >
       <div className="relative w-full h-[50px] flex items-center justify-center">
-        {/* Real Google AdSense Banner */}
-        <GoogleAdSenseBanner
-          position={position}
-          onAdLoaded={() => setAdLoaded(true)}
-        />
-
-        {/* Fallback placeholder if ad doesn't load */}
-        {!adLoaded && (
-          <div className="text-center">
-            <div className="text-xs text-white/40 uppercase tracking-wider mb-1">
+        {/* Placeholder shown when native ads aren't available (web preview) */}
+        {!isNativeAndroid() && (
+          <div className="text-center px-4">
+            <div className="text-xs text-white/40 uppercase tracking-wider mb-0.5">
               Advertisement
             </div>
-            <div className="text-sm text-white/60 font-medium">
-              🎮 Configure AdSense in .env
-            </div>
-            <div className="text-[10px] text-white/30 mt-1">
-              Remove ads with Premium Pass ($3.99)
+            <div className="text-[10px] text-white/30 flex items-center gap-1 justify-center">
+              <Crown className="w-3 h-3" />
+              Remove ads with Premium Pack
             </div>
           </div>
         )}
@@ -121,73 +129,9 @@ export const AdBanner = ({ position = 'bottom', onClose }: AdBannerProps) => {
   );
 };
 
-// ============================================
-// GOOGLE ADSENSE COMPONENT (WEB)
-// ============================================
-interface GoogleAdSenseBannerProps {
-  position: 'top' | 'bottom';
-  onAdLoaded?: () => void;
-}
-
-export const GoogleAdSenseBanner = ({ position, onAdLoaded }: GoogleAdSenseBannerProps) => {
-  const adConfig = getAdUnitConfig(position);
-
-  useEffect(() => {
-    try {
-      // Load the ad
-      loadAd(adConfig.slot);
-      onAdLoaded?.();
-    } catch (error) {
-      console.error('AdSense error:', error);
-    }
-  }, [adConfig.slot, onAdLoaded]);
-
-  return (
-    <ins
-      className="adsbygoogle"
-      style={{ display: 'block' }}
-      data-ad-client={adConfig.client}
-      data-ad-slot={adConfig.slot}
-      data-ad-format={adConfig.format}
-      data-full-width-responsive={adConfig.responsive.toString()}
-      data-ad-test={adConfig.testMode ? 'on' : undefined}
-    />
-  );
-};
-
-// ============================================
-// ADMOB COMPONENT (REACT NATIVE)
-// Uncomment when using in React Native app
-// ============================================
-
-/*
-import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
-
-interface AdMobBannerAdProps {
-  onAdLoaded?: () => void;
-}
-
-export const AdMobBannerAd = ({ onAdLoaded }: AdMobBannerAdProps) => {
-  // Use test IDs during development
-  const adUnitId = __DEV__
-    ? TestIds.BANNER
-    : 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX'; // Replace with your ad unit ID
-
-  return (
-    <BannerAd
-      unitId={adUnitId}
-      size={BannerAdSize.BANNER}
-      requestOptions={{
-        requestNonPersonalizedAdsOnly: false,
-      }}
-      onAdLoaded={() => {
-        console.log('Ad loaded');
-        onAdLoaded?.();
-      }}
-      onAdFailedToLoad={(error) => {
-        console.error('Ad failed to load:', error);
-      }}
-    />
-  );
-};
-*/
+// Note: On native Android with Capacitor, banner ads are managed by the native SDK.
+// The showBanner() function from admob.ts handles the native ad display.
+// This React component is primarily for:
+// 1. Controlling when ads should be shown (premium check)
+// 2. Providing UI for closing the ad
+// 3. Showing a fallback placeholder in web preview mode

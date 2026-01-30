@@ -1,3 +1,14 @@
+/**
+ * Block Blast - Main Application
+ * 
+ * GOOGLE PLAY COMPLIANT MONETIZATION:
+ * - Payments: Google Play Billing (react-native-iap via Capacitor)
+ * - Ads: Google AdMob (NOT AdSense - that's for web only)
+ * 
+ * IMPORTANT: This app is designed for Google Play distribution.
+ * External payment processors (Stripe, PayPal, etc.) are NOT allowed.
+ */
+
 import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { HomeScreen } from './screens/HomeScreen';
@@ -8,8 +19,10 @@ import { AchievementsScreen } from './screens/AchievementsScreen';
 import { AchievementUnlocked, useAchievementNotifications } from './components/ui/AchievementUnlocked';
 import { useGameStore } from './store/gameStore';
 import { getLevelData } from './utils/gameLogic';
-import { initializeAdSense, initializeAnalytics } from './services/ads';
-import { REVENUE_TRACKING } from './config/payment';
+
+// Google Play Billing & AdMob Services
+import { initializeBilling, restorePurchases, onPurchaseUpdate, getCoinAmountForProduct } from './services/billing';
+import { initializeAdMob, onRewardEarned, getRewardedAdCoinAmount } from './services/admob';
 
 type Screen = 'home' | 'game' | 'level' | 'shop' | 'challenges' | 'challenge' | 'achievements';
 
@@ -23,22 +36,94 @@ interface GameConfig {
 function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [gameConfig, setGameConfig] = useState<GameConfig>({ mode: 'quick' });
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  const { completeLevel, completeDailyChallenge, dailyChallenges, checkAndUnlockAchievements } = useGameStore();
+  const { 
+    completeLevel, 
+    completeDailyChallenge, 
+    dailyChallenges, 
+    checkAndUnlockAchievements,
+    handlePurchaseSuccess,
+    handleRestorePurchases,
+    addCoins,
+    isPremium,
+  } = useGameStore();
+  
   const { currentAchievement, showMultipleAchievements, closeNotification } = useAchievementNotifications();
 
-  // Initialize monetization services on app load
+  /**
+   * Initialize Google Play Billing and AdMob on app load
+   * This is required for monetization to work on Google Play
+   */
   useEffect(() => {
-    // Initialize Google AdSense for ad revenue
-    initializeAdSense();
+    const initializeServices = async () => {
+      console.log('🚀 Initializing Google Play monetization services...');
 
-    // Initialize Google Analytics for revenue tracking
-    if (REVENUE_TRACKING.enabled && REVENUE_TRACKING.ga4MeasurementId) {
-      initializeAnalytics(REVENUE_TRACKING.ga4MeasurementId);
+      try {
+        // 1. Initialize Google Play Billing
+        // This connects to Google Play and loads available products
+        const billingAvailable = await initializeBilling();
+        console.log(`💰 Google Play Billing: ${billingAvailable ? 'Available' : 'Not available (web mode)'}`);
+
+        // 2. Set up purchase listener
+        // This handles successful purchases from Google Play
+        const unsubscribePurchase = onPurchaseUpdate((result) => {
+          if (result.success && result.productId) {
+            const coinAmount = getCoinAmountForProduct(result.productId);
+            handlePurchaseSuccess(result.productId, coinAmount);
+            console.log(`✅ Purchase completed: ${result.productId}`);
+          }
+        });
+
+        // 3. Restore previous purchases
+        // Important for users who reinstall the app
+        if (billingAvailable) {
+          const restoredProducts = await restorePurchases();
+          if (restoredProducts.length > 0) {
+            handleRestorePurchases(restoredProducts);
+            console.log(`✅ Restored purchases: ${restoredProducts.join(', ')}`);
+          }
+        }
+
+        // 4. Initialize Google AdMob (only for non-premium users)
+        // Premium users don't see ads
+        if (!isPremium) {
+          const adMobAvailable = await initializeAdMob();
+          console.log(`📺 Google AdMob: ${adMobAvailable ? 'Available' : 'Not available (web mode)'}`);
+        } else {
+          console.log('📺 Google AdMob: Skipped (Premium user)');
+        }
+
+        // 5. Set up rewarded ad listener
+        // This grants coins when user watches a rewarded video ad
+        const unsubscribeReward = onRewardEarned(() => {
+          addCoins(getRewardedAdCoinAmount());
+          console.log(`🎁 Rewarded ad completed: +${getRewardedAdCoinAmount()} coins`);
+        });
+
+        setIsInitialized(true);
+        console.log('✅ Google Play monetization services initialized');
+
+        // Cleanup function
+        return () => {
+          unsubscribePurchase();
+          unsubscribeReward();
+        };
+      } catch (error) {
+        console.error('❌ Failed to initialize monetization services:', error);
+        setIsInitialized(true); // Still allow app to run
+      }
+    };
+
+    initializeServices();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Re-initialize AdMob when premium status changes (to hide ads for new premium users)
+  useEffect(() => {
+    if (isInitialized && isPremium) {
+      console.log('👑 Premium activated - Ads disabled');
     }
-
-    console.log('💰 Monetization services initialized');
-  }, []);
+  }, [isPremium, isInitialized]);
 
   // Check for achievements periodically (when returning to home screen)
   useEffect(() => {
@@ -48,7 +133,7 @@ function App() {
         showMultipleAchievements(newAchievements);
       }
     }
-  }, [currentScreen]);
+  }, [currentScreen, checkAndUnlockAchievements, showMultipleAchievements]);
 
   const handleStartQuickGame = () => {
     setGameConfig({ mode: 'quick' });
