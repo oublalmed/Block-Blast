@@ -70,7 +70,11 @@ export interface UserProgress {
   currentLevel: number;
   completedLevels: number[];
   coins: number;
+  // Google Play Billing requires local entitlement tracking for restore flows.
+  isPremium: boolean;
   premiumPass: PremiumPass;
+  // Track processed purchases to avoid double-granting entitlements.
+  processedPurchaseTokens: string[];
   dailyChallenges: DailyChallenge[];
   lastPlayedDate: string;
   achievements: string[]; // List of unlocked achievement IDs

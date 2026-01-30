@@ -4,45 +4,55 @@ import { useGameStore } from '../store/gameStore';
 import { useState, useEffect } from 'react';
 import { POWERUPS } from '../types/powerups';
 import type { PowerUpType } from '../types/powerups';
-import { createPremiumCheckoutSession, checkPaymentStatus } from '../services/stripe';
-import { PREMIUM_PASS } from '../config/payment';
+import type { Product } from 'react-native-iap';
+import { COIN_PACKS, PREMIUM_PRODUCT, REWARDED_AD_COINS } from '../config/monetization';
+import { showRewardedAd } from '../services/adsService';
+import { fetchProducts, purchaseProduct, restorePurchases } from '../services/billingService';
 
 interface ShopScreenProps {
   onBack: () => void;
 }
 
 export const ShopScreen = ({ onBack }: ShopScreenProps) => {
-  const { premiumPass, activatePremiumPass, coins, buyPowerUp, powerUps } = useGameStore();
+  const { isPremium, coins, buyPowerUp, powerUps } = useGameStore();
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [selectedPowerUp, setSelectedPowerUp] = useState<PowerUpType | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const [isRewarding, setIsRewarding] = useState(false);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [iapProducts, setIapProducts] = useState<Record<string, Product>>({});
 
-  // Check for successful payment on component mount
+  // Load Google Play product details on mount.
   useEffect(() => {
-    const { success, sessionId } = checkPaymentStatus();
-    if (success && sessionId) {
-      // Payment successful! Activate premium pass
-      activatePremiumPass();
-      // Clean up URL
-      window.history.replaceState({}, '', window.location.pathname);
-      // Show success message
-      alert('🎉 Premium Pass activated! Enjoy your benefits!');
-    }
-  }, [activatePremiumPass]);
+    let isMounted = true;
+    const loadProducts = async () => {
+      try {
+        const products = await fetchProducts();
+        if (isMounted) {
+          setIapProducts(products);
+        }
+      } catch (error) {
+        console.error('Failed to load IAP products:', error);
+      } finally {
+        if (isMounted) {
+          setLoadingProducts(false);
+        }
+      }
+    };
+
+    loadProducts();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handlePurchasePremium = async () => {
     setIsProcessingPayment(true);
     try {
-      // Create Stripe checkout session and redirect to payment page
-      const checkoutUrl = await createPremiumCheckoutSession();
-
-      if (checkoutUrl) {
-        // Redirect to Stripe Checkout
-        window.location.href = checkoutUrl;
-      } else {
-        alert('❌ Unable to process payment. Please try again or contact support.');
-      }
+      // Google Play Billing flow (required for Play Store compliance).
+      await purchaseProduct(PREMIUM_PRODUCT.productId);
     } catch (error) {
       console.error('Payment error:', error);
       alert('❌ Payment failed. Please try again.');
@@ -50,6 +60,57 @@ export const ShopScreen = ({ onBack }: ShopScreenProps) => {
       setIsProcessingPayment(false);
       setShowPurchaseModal(false);
     }
+  };
+
+  const handlePurchaseCoins = async (productId: string) => {
+    setIsProcessingPayment(true);
+    try {
+      // Google Play Billing flow for consumable coin packs.
+      await purchaseProduct(productId);
+    } catch (error) {
+      console.error('Coin purchase error:', error);
+      alert('❌ Purchase failed. Please try again.');
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
+  const handleRestorePurchases = async () => {
+    setIsRestoring(true);
+    try {
+      await restorePurchases();
+      alert('✅ Purchases restored from Google Play.');
+    } catch (error) {
+      console.error('Restore error:', error);
+      alert('❌ Restore failed. Please try again.');
+    } finally {
+      setIsRestoring(false);
+    }
+  };
+
+  const handleRewardedAd = async () => {
+    setIsRewarding(true);
+    try {
+      const rewarded = await showRewardedAd();
+      if (!rewarded) {
+        alert('Ad not ready yet. Please try again in a moment.');
+      }
+    } catch (error) {
+      console.error('Rewarded ad error:', error);
+      alert('❌ Rewarded ad failed. Please try again.');
+    } finally {
+      setIsRewarding(false);
+    }
+  };
+
+  const getDisplayPrice = (product?: Product) => {
+    const anyProduct = product as any;
+    return (
+      product?.localizedPrice ||
+      anyProduct?.oneTimePurchaseOfferDetails?.formattedPrice ||
+      product?.price ||
+      'Google Play'
+    );
   };
 
   const handleBuyPowerUp = (type: PowerUpType, cost: number) => {
@@ -84,6 +145,8 @@ export const ShopScreen = ({ onBack }: ShopScreenProps) => {
       description: 'Receive 100 bonus coins every day',
     },
   ];
+
+  const premiumProduct = iapProducts[PREMIUM_PRODUCT.productId];
 
   return (
     <div className="relative w-full min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 overflow-y-auto">
@@ -199,7 +262,7 @@ export const ShopScreen = ({ onBack }: ShopScreenProps) => {
           </div>
         </motion.div>
 
-        {/* Premium Pass Card */}
+        {/* Premium Pack Card */}
         <motion.div
           className="relative overflow-hidden bg-gradient-to-br from-yellow-500 via-orange-500 to-pink-500 rounded-3xl p-[2px] mb-8"
           initial={{ opacity: 0, y: 20 }}
@@ -213,9 +276,9 @@ export const ShopScreen = ({ onBack }: ShopScreenProps) => {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Crown className="w-8 h-8 text-yellow-400 fill-current" />
-                <h2 className="text-white font-black text-2xl">Premium Pass</h2>
+                <h2 className="text-white font-black text-2xl">Premium Pack</h2>
               </div>
-              {premiumPass.active && (
+              {isPremium && (
                 <div className="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
                   <Check className="w-4 h-4" />
                   Active
@@ -245,7 +308,7 @@ export const ShopScreen = ({ onBack }: ShopScreenProps) => {
             </div>
 
             {/* Purchase Button */}
-            {!premiumPass.active ? (
+            {!isPremium ? (
               <motion.button
                 onClick={() => setShowPurchaseModal(true)}
                 disabled={isProcessingPayment}
@@ -270,57 +333,100 @@ export const ShopScreen = ({ onBack }: ShopScreenProps) => {
                 whileTap={!isProcessingPayment ? { scale: 0.95 } : {}}
               >
                 <Crown className="w-6 h-6 fill-current" />
-                <span>Upgrade Now - ${PREMIUM_PASS.price}</span>
+                <span>
+                  {loadingProducts ? 'Loading price...' : `Upgrade Now - ${getDisplayPrice(premiumProduct)}`}
+                </span>
                 <CreditCard className="w-5 h-5" />
               </motion.button>
             ) : (
               <div className="text-center">
                 <div className="text-green-400 font-bold text-lg mb-2 flex items-center justify-center gap-2">
                   <Check className="w-6 h-6" />
-                  You have Premium!
+                  Premium Pack active!
                 </div>
                 <div className="text-sm text-white/60">
-                  Expires: {premiumPass.expiresAt ? new Date(premiumPass.expiresAt).toLocaleDateString() : 'Never'}
+                  No ads • 2x coin rewards • Premium features unlocked
                 </div>
               </div>
             )}
+
+            <div className="mt-4 text-center">
+              <button
+                onClick={handleRestorePurchases}
+                disabled={isRestoring}
+                className="text-xs text-white/70 hover:text-white underline disabled:opacity-50"
+              >
+                {isRestoring ? 'Restoring purchases...' : 'Restore purchases'}
+              </button>
+            </div>
           </div>
         </motion.div>
 
-        {/* Coin Packs (Future Feature) */}
+        {/* Coin Packs */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
         >
-          <h2 className="text-white font-bold text-xl mb-4">Coin Packs (Coming Soon)</h2>
+          <h2 className="text-white font-bold text-xl mb-2">Coin Packs</h2>
+          <p className="text-sm text-white/60 mb-4">Purchases handled by Google Play Billing</p>
+
           <div className="grid grid-cols-2 gap-3">
-            {[
-              { amount: 500, price: '$0.99', emoji: '💰' },
-              { amount: 1200, price: '$1.99', emoji: '💎', badge: 'Popular' },
-              { amount: 3000, price: '$4.99', emoji: '🏆' },
-              { amount: 10000, price: '$14.99', emoji: '👑', badge: 'Best Value' },
-            ].map((pack, index) => (
-              <motion.div
-                key={index}
-                className="relative bg-slate-800/50 rounded-2xl p-4 border border-white/10 opacity-50"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 0.5, scale: 1 }}
-                transition={{ delay: 0.7 + index * 0.05 }}
-              >
-                {pack.badge && (
-                  <div className="absolute -top-2 -right-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                    {pack.badge}
+            {COIN_PACKS.map((pack, index) => {
+              const product = iapProducts[pack.productId];
+              const emoji = index === 0 ? '💰' : index === 1 ? '💎' : '🏆';
+              return (
+                <motion.div
+                  key={pack.productId}
+                  className="relative bg-slate-800/50 rounded-2xl p-4 border border-white/10"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.7 + index * 0.05 }}
+                >
+                  {pack.badge && (
+                    <div className="absolute -top-2 -right-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                      {pack.badge}
+                    </div>
+                  )}
+                  <div className="text-4xl text-center mb-2">{emoji}</div>
+                  <div className="text-white font-bold text-lg text-center mb-1">
+                    {pack.coins.toLocaleString()}
                   </div>
-                )}
-                <div className="text-4xl text-center mb-2">{pack.emoji}</div>
-                <div className="text-white font-bold text-lg text-center mb-1">
-                  {pack.amount.toLocaleString()}
-                </div>
-                <div className="text-white/60 text-sm text-center">{pack.price}</div>
-              </motion.div>
-            ))}
+                  <div className="text-white/60 text-sm text-center mb-3">
+                    {loadingProducts ? 'Loading price...' : getDisplayPrice(product)}
+                  </div>
+                  <button
+                    onClick={() => handlePurchaseCoins(pack.productId)}
+                    disabled={isProcessingPayment || loadingProducts}
+                    className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold py-2 rounded-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                  >
+                    Buy Coins
+                  </button>
+                </motion.div>
+              );
+            })}
           </div>
+
+          {/* Rewarded Ads */}
+          {!isPremium && (
+            <div className="mt-5 bg-slate-800/50 rounded-2xl p-4 border border-white/10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-white font-bold">Watch an Ad</div>
+                  <div className="text-sm text-white/60">
+                    Earn {REWARDED_AD_COINS} bonus coins
+                  </div>
+                </div>
+                <button
+                  onClick={handleRewardedAd}
+                  disabled={isRewarding}
+                  className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold px-4 py-2 rounded-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                >
+                  {isRewarding ? 'Loading...' : 'Watch'}
+                </button>
+              </div>
+            </div>
+          )}
         </motion.div>
       </div>
 
@@ -435,18 +541,18 @@ export const ShopScreen = ({ onBack }: ShopScreenProps) => {
           >
             <div className="text-center mb-6">
               <Crown className="w-16 h-16 text-yellow-400 fill-current mx-auto mb-4" />
-              <h3 className="text-white font-bold text-2xl mb-2">Upgrade to Premium?</h3>
+              <h3 className="text-white font-bold text-2xl mb-2">Upgrade to Premium Pack?</h3>
               <p className="text-white/60 text-sm mb-4">
-                {PREMIUM_PASS.description}
+                {PREMIUM_PRODUCT.description}
               </p>
 
               {/* Price Display */}
               <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl p-4 border border-yellow-500/30">
                 <div className="text-3xl font-black text-yellow-300 mb-1">
-                  ${PREMIUM_PASS.price}
+                  {loadingProducts ? '...' : getDisplayPrice(premiumProduct)}
                 </div>
                 <div className="text-xs text-white/60 uppercase tracking-wider">
-                  One-time payment • Secure checkout via Stripe
+                  One-time purchase • Google Play Billing
                 </div>
               </div>
             </div>
@@ -469,7 +575,7 @@ export const ShopScreen = ({ onBack }: ShopScreenProps) => {
                 ) : (
                   <>
                     <CreditCard className="w-5 h-5" />
-                    Pay ${PREMIUM_PASS.price}
+                    Buy with Google Play
                   </>
                 )}
               </button>

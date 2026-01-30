@@ -8,8 +8,8 @@ import { AchievementsScreen } from './screens/AchievementsScreen';
 import { AchievementUnlocked, useAchievementNotifications } from './components/ui/AchievementUnlocked';
 import { useGameStore } from './store/gameStore';
 import { getLevelData } from './utils/gameLogic';
-import { initializeAdSense, initializeAnalytics } from './services/ads';
-import { REVENUE_TRACKING } from './config/payment';
+import { initializeAds } from './services/adsService';
+import { endBillingConnection, initializeBilling, restorePurchases } from './services/billingService';
 
 type Screen = 'home' | 'game' | 'level' | 'shop' | 'challenges' | 'challenge' | 'achievements';
 
@@ -29,15 +29,20 @@ function App() {
 
   // Initialize monetization services on app load
   useEffect(() => {
-    // Initialize Google AdSense for ad revenue
-    initializeAdSense();
+    // Google Play requires Google Play Billing + AdMob for monetization.
+    const initMonetization = async () => {
+      await initializeBilling();
+      await restorePurchases();
+      await initializeAds();
+    };
 
-    // Initialize Google Analytics for revenue tracking
-    if (REVENUE_TRACKING.enabled && REVENUE_TRACKING.ga4MeasurementId) {
-      initializeAnalytics(REVENUE_TRACKING.ga4MeasurementId);
-    }
+    initMonetization().catch((error) => {
+      console.error('Failed to initialize monetization:', error);
+    });
 
-    console.log('💰 Monetization services initialized');
+    return () => {
+      endBillingConnection();
+    };
   }, []);
 
   // Check for achievements periodically (when returning to home screen)

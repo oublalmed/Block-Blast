@@ -8,6 +8,7 @@ import { GameOverModal } from '../components/ui/GameOverModal';
 import { ComboPopup } from '../components/ui/ComboPopup';
 import { ScoreFloat } from '../components/ui/ScoreFloat';
 import { AdBanner } from '../components/ads/AdBanner';
+import { AdInterstitial } from '../components/ads/AdInterstitial';
 import { useGame } from '../hooks/useGame';
 import { useGameStore } from '../store/gameStore';
 import type { Piece } from '../types/game';
@@ -41,7 +42,7 @@ export const GameScreen = ({
     hint,
   } = useGame();
 
-  const { addCoins, premiumPass } = useGameStore();
+  const { addCoins, isPremium } = useGameStore();
 
   const [draggingPiece, setDraggingPiece] = useState<Piece | null>(null);
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
@@ -51,6 +52,8 @@ export const GameScreen = ({
   const [showCombo, setShowCombo] = useState(false);
   const [showScoreFloat, setShowScoreFloat] = useState(false);
   const [unplaceablePieces, setUnplaceablePieces] = useState<Set<string>>(new Set());
+  const [levelCompletionHandled, setLevelCompletionHandled] = useState(false);
+  const [showLevelInterstitial, setShowLevelInterstitial] = useState(false);
 
   // Update unplaceable pieces
   useEffect(() => {
@@ -74,11 +77,18 @@ export const GameScreen = ({
 
   // Handle level completion
   useEffect(() => {
-    if (levelMode && targetScore && score >= targetScore) {
+    if (levelMode && targetScore && score >= targetScore && !levelCompletionHandled) {
       const stars = Math.min(3, Math.floor(score / targetScore));
+      setLevelCompletionHandled(true);
       onLevelComplete?.(score, stars);
+      setShowLevelInterstitial(true);
     }
-  }, [score, levelMode, targetScore, onLevelComplete]);
+  }, [score, levelMode, targetScore, onLevelComplete, levelCompletionHandled]);
+
+  useEffect(() => {
+    setLevelCompletionHandled(false);
+    setShowLevelInterstitial(false);
+  }, [levelMode, targetScore]);
 
   // Award coins on game over
   useEffect(() => {
@@ -173,6 +183,8 @@ export const GameScreen = ({
   }, [draggingPiece, handlePieceDrag]);
 
   const handlePlayAgain = () => {
+    setLevelCompletionHandled(false);
+    setShowLevelInterstitial(false);
     resetGame();
   };
 
@@ -273,7 +285,16 @@ export const GameScreen = ({
       />
 
       {/* Ad Banner */}
-      {!premiumPass.active && <AdBanner position="bottom" />}
+      {!isPremium && <AdBanner position="bottom" />}
+
+      {/* Interstitial Ads (limited frequency) */}
+      {isGameOver && <AdInterstitial trigger="game-over" />}
+      {showLevelInterstitial && (
+        <AdInterstitial
+          trigger="level-complete"
+          onAdClosed={() => setShowLevelInterstitial(false)}
+        />
+      )}
     </div>
   );
 };

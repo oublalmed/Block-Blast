@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { UserProgress, DailyChallenge } from '../types/game';
 import { ACHIEVEMENTS, type Achievement } from '../types/achievements';
 import type { PowerUpType } from '../types/powerups';
@@ -8,12 +9,16 @@ interface GameStore extends UserProgress {
   // Actions
   updateScore: (score: number) => void;
   addCoins: (amount: number) => void;
+  grantCoins: (amount: number) => void;
   spendCoins: (amount: number) => boolean;
   completeLevel: (levelId: number, score: number, stars: number) => void;
   unlockLevel: (levelId: number) => void;
   setCurrentLevel: (levelId: number) => void;
   completeDailyChallenge: (challengeId: string) => void;
   activatePremiumPass: () => void;
+  setPremiumStatus: (isPremium: boolean) => void;
+  markPurchaseProcessed: (token: string) => void;
+  hasProcessedPurchase: (token: string) => boolean;
   incrementGamesPlayed: () => void;
   resetProgress: () => void;
   updateLastPlayedDate: () => void;
@@ -79,6 +84,7 @@ const initialState: UserProgress = {
   currentLevel: 1,
   completedLevels: [],
   coins: 0,
+  isPremium: false,
   premiumPass: {
     active: false,
     benefits: {
@@ -94,6 +100,7 @@ const initialState: UserProgress = {
   maxCombo: 0,
   perfectClears: 0,
   consecutiveDays: 1,
+  processedPurchaseTokens: [],
   powerUps: {
     undo: 3, // Start with 3 free undos
     hint: 3, // Start with 3 free hints
@@ -119,11 +126,16 @@ export const useGameStore = create<GameStore>()(
 
       addCoins: (amount: number) => {
         set((state) => {
-          const multiplier = state.premiumPass.active ? 2 : 1;
+          const multiplier = state.isPremium ? 2 : 1;
           return {
             coins: state.coins + amount * multiplier,
           };
         });
+      },
+
+      grantCoins: (amount: number) => {
+        // Purchases/rewarded ads grant a fixed amount (no premium multiplier).
+        set((state) => ({ coins: state.coins + amount }));
       },
 
       spendCoins: (amount: number) => {
@@ -143,7 +155,7 @@ export const useGameStore = create<GameStore>()(
 
           // Reward coins based on stars
           const coinReward = stars * 50;
-          const multiplier = state.premiumPass.active ? 2 : 1;
+          const multiplier = state.isPremium ? 2 : 1;
 
           return {
             completedLevels,
@@ -171,7 +183,7 @@ export const useGameStore = create<GameStore>()(
 
           const challenge = state.dailyChallenges.find((c) => c.id === challengeId);
           const reward = challenge ? challenge.reward : 0;
-          const multiplier = state.premiumPass.active ? 2 : 1;
+          const multiplier = state.isPremium ? 2 : 1;
 
           return {
             dailyChallenges,
@@ -182,14 +194,13 @@ export const useGameStore = create<GameStore>()(
 
       activatePremiumPass: () => {
         const now = new Date();
-        const expiresAt = new Date(now);
-        expiresAt.setMonth(expiresAt.getMonth() + 1);
 
         set({
+          isPremium: true,
           premiumPass: {
             active: true,
             purchaseDate: now,
-            expiresAt,
+            // Google Play non-consumables do not expire.
             benefits: {
               noAds: true,
               doubleRewards: true,
@@ -198,6 +209,35 @@ export const useGameStore = create<GameStore>()(
             },
           },
         });
+      },
+
+      setPremiumStatus: (isPremium: boolean) => {
+        set((state) => ({
+          isPremium,
+          premiumPass: {
+            ...state.premiumPass,
+            active: isPremium,
+            benefits: {
+              noAds: isPremium,
+              doubleRewards: isPremium,
+              exclusivePieces: isPremium,
+              dailyBonus: isPremium,
+            },
+          },
+        }));
+      },
+
+      markPurchaseProcessed: (token: string) => {
+        set((state) => ({
+          processedPurchaseTokens: state.processedPurchaseTokens.includes(token)
+            ? state.processedPurchaseTokens
+            : [...state.processedPurchaseTokens, token],
+        }));
+      },
+
+      hasProcessedPurchase: (token: string) => {
+        const state = get();
+        return state.processedPurchaseTokens.includes(token);
       },
 
       incrementGamesPlayed: () => {
@@ -301,7 +341,7 @@ export const useGameStore = create<GameStore>()(
               if (achievement.id === 'first_game') {
                 shouldUnlock = state.gamesPlayed >= 1;
               } else if (achievement.id === 'premium_user') {
-                shouldUnlock = state.premiumPass.active;
+                shouldUnlock = state.isPremium;
               } else if (achievement.id.startsWith('daily_streak_')) {
                 shouldUnlock = state.consecutiveDays >= achievement.requirement;
               }
@@ -372,6 +412,22 @@ export const useGameStore = create<GameStore>()(
     }),
     {
       name: 'block-blast-storage',
+      // Google Play requires durable entitlement storage across reinstalls.
+      storage: createJSONStorage(() => AsyncStorage),
+      merge: (persistedState, currentState) => {
+        const typedState = persistedState as Partial<GameStore>;
+        const merged = {
+          ...currentState,
+          ...typedState,
+        };
+
+        return {
+          ...merged,
+          isPremium:
+            typedState.isPremium ?? typedState.premiumPass?.active ?? currentState.isPremium,
+          processedPurchaseTokens: typedState.processedPurchaseTokens ?? [],
+        };
+      },
     }
   )
 );
