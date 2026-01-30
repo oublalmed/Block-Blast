@@ -1,16 +1,10 @@
 /**
- * Google Play Billing Service
- * 
- * This service handles all in-app purchases via Google Play Billing.
- * Required for Google Play Store compliance - external payment systems
- * (Stripe, PayPal, etc.) are NOT allowed for digital goods.
- * 
- * Products:
- * - premium_pack: Non-consumable (one-time purchase, removes ads, 2x coins)
- * - coins_100: Consumable (100 coins)
- * - coins_500: Consumable (500 coins)
- * - coins_1200: Consumable (1200 coins)
- * 
+ * Google Play Billing Service (DEPRECATED)
+ *
+ * This project no longer uses in-app purchases. Monetization is handled
+ * exclusively through ads and rewarded ads, so this service is not used.
+ *
+ * @deprecated IAP removed. Keep only for legacy reference.
  * @see https://developer.android.com/google/play/billing
  */
 

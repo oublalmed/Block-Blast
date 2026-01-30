@@ -68,7 +68,7 @@ export const ChallengesScreen = ({ onBack, onStartChallenge }: ChallengesScreenP
               </div>
               <div className="text-sm text-white/60">
                 Earn bonus coins and rewards by completing challenges
-                {premiumPass.active && ' • 2x rewards with Premium!'}
+                {premiumPass.active && ' • Premium Pass doubles rewards!'}
               </div>
             </div>
           </div>
@@ -201,7 +201,7 @@ export const ChallengesScreen = ({ onBack, onStartChallenge }: ChallengesScreenP
             </li>
             <li className="flex items-start gap-2">
               <span className="text-purple-400 mt-0.5">•</span>
-              <span>Premium members earn double rewards!</span>
+              <span>Premium Pass doubles rewards (earned via ads)</span>
             </li>
           </ul>
         </motion.div>

@@ -46,9 +46,9 @@ const tutorialSteps: TutorialStep[] = [
   },
   {
     title: 'Earn Coins & Unlock Features',
-    description: 'Every game earns you coins. Use them in the shop to unlock power-ups and get the Premium Pass!',
+    description: 'Every game earns you coins. Watch rewarded ads in the shop to earn extra coins and unlock the Premium Pass!',
     icon: '💰',
-    tip: 'Premium Pass removes ads and doubles rewards'
+    tip: 'Rewarded ads grant coins instantly; Premium Pass removes ads and doubles rewards'
   },
   {
     title: 'Daily Challenges',

@@ -1,161 +1,84 @@
 /**
- * Shop Screen - Google Play Billing Integration
- * 
- * This screen handles all in-app purchases via Google Play Billing.
- * NO external payment systems (Stripe, PayPal) are used.
- * 
- * Products:
- * - Premium Pack: One-time purchase (non-consumable)
- * - Coin Packs: Consumable purchases
- * 
- * @see https://developer.android.com/google/play/billing
+ * Shop Screen - Rewarded Ads & Power-Ups
+ *
+ * This screen lets players earn coins by watching rewarded ads,
+ * then spend coins on power-ups. Premium Pass is unlocked via ads.
  */
 
 import { motion } from 'framer-motion';
 import { ArrowLeft, Crown, Check, Zap, Gift, Star, X, ShoppingCart, Play, Coins } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { POWERUPS } from '../types/powerups';
 import type { PowerUpType } from '../types/powerups';
-import { 
-  initializeBilling, 
-  queryProducts, 
-  purchaseProduct, 
-  restorePurchases,
-  PRODUCT_IDS,
-  type ProductDetails,
-  getCoinsForProduct,
-  hasPremium,
-  savePremiumStatus,
-} from '../services/billing';
 import { showRewardedAd, isRewardedAdReady } from '../services/ads';
-import { BILLING_PRODUCTS } from '../config/payment';
+import { ADMOB_CONFIG } from '../config/payment';
 
 interface ShopScreenProps {
   onBack: () => void;
 }
 
 export const ShopScreen = ({ onBack }: ShopScreenProps) => {
-  const { premiumPass, activatePremiumPass, coins, buyPowerUp, powerUps, addCoins } = useGameStore();
+  const {
+    premiumPass,
+    coins,
+    rewardedAdsWatched,
+    buyPowerUp,
+    powerUps,
+    recordRewardedAd,
+  } = useGameStore();
   const [selectedPowerUp, setSelectedPowerUp] = useState<PowerUpType | null>(null);
   const [quantity, setQuantity] = useState(1);
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const [products, setProducts] = useState<ProductDetails[]>([]);
-  const [isRestoringPurchases, setIsRestoringPurchases] = useState(false);
-
-  // Initialize billing and fetch products
-  useEffect(() => {
-    const init = async () => {
-      await initializeBilling();
-      
-      // Query all product details from Google Play
-      const productIds = [
-        PRODUCT_IDS.PREMIUM_PACK,
-        PRODUCT_IDS.COINS_100,
-        PRODUCT_IDS.COINS_500,
-        PRODUCT_IDS.COINS_1200,
-      ];
-      
-      const fetchedProducts = await queryProducts(productIds);
-      setProducts(fetchedProducts);
-      
-      // Check if user already has premium
-      if (hasPremium() && !premiumPass.active) {
-        activatePremiumPass();
-      }
-    };
-    
-    init();
-  }, [activatePremiumPass, premiumPass.active]);
+  const [isWatchingAds, setIsWatchingAds] = useState(false);
 
   /**
-   * Handle Premium Pack purchase via Google Play Billing
-   * 
-   * GOOGLE PLAY REQUIREMENT: All digital goods must be purchased
-   * through Google Play Billing - no external payment links allowed.
+   * Watch rewarded ads to earn coins (and progress toward Premium).
    */
-  const handlePurchasePremium = async () => {
-    setIsProcessingPayment(true);
-    try {
-      // Initiate purchase through Google Play
-      const result = await purchaseProduct(PRODUCT_IDS.PREMIUM_PACK);
+  const watchRewardedAds = useCallback(async (adsToWatch: number) => {
+    if (isWatchingAds) return;
+    setIsWatchingAds(true);
 
-      if (result) {
-        // Purchase successful! Activate premium
-        activatePremiumPass();
-        savePremiumStatus(true);
-        
-        // Show success message
-        alert('🎉 Premium Pack activated! Enjoy your benefits!');
+    let totalCoins = 0;
+    let adsCompleted = 0;
+    let unlockedPremium = false;
+
+    try {
+      for (let i = 0; i < adsToWatch; i += 1) {
+        const success = await showRewardedAd((reward) => {
+          const result = recordRewardedAd(reward.amount);
+          totalCoins += result.coinsAdded;
+          unlockedPremium = unlockedPremium || result.unlockedPremium;
+        });
+
+        if (!success) {
+          break;
+        }
+        adsCompleted += 1;
       }
-    } catch (error) {
-      console.error('Purchase error:', error);
-      alert('❌ Purchase failed. Please try again.');
-    } finally {
-      setIsProcessingPayment(false);
-    }
-  };
 
-  /**
-   * Handle coin pack purchase via Google Play Billing
-   */
-  const handlePurchaseCoins = async (productId: string) => {
-    setIsProcessingPayment(true);
-    try {
-      const result = await purchaseProduct(productId);
-
-      if (result) {
-        // Get coins amount and add to balance
-        const coinsAmount = getCoinsForProduct(productId);
-        addCoins(coinsAmount);
-        
-        alert(`🎉 ${coinsAmount} coins added to your balance!`);
-      }
-    } catch (error) {
-      console.error('Purchase error:', error);
-      alert('❌ Purchase failed. Please try again.');
-    } finally {
-      setIsProcessingPayment(false);
-    }
-  };
-
-  /**
-   * Restore purchases from Google Play
-   * 
-   * GOOGLE PLAY REQUIREMENT: Users must be able to restore
-   * their purchases on reinstall or new device.
-   */
-  const handleRestorePurchases = async () => {
-    setIsRestoringPurchases(true);
-    try {
-      await restorePurchases();
-      
-      if (hasPremium()) {
-        activatePremiumPass();
-        alert('✅ Premium status restored!');
+      if (adsCompleted > 0) {
+        const adsLabel = adsCompleted === 1 ? 'ad' : 'ads';
+        alert(`🎉 ${totalCoins} coins earned from ${adsCompleted} ${adsLabel}!`);
+        if (unlockedPremium) {
+          alert('👑 Premium Pass unlocked! Enjoy your benefits.');
+        }
       } else {
-        alert('ℹ️ No previous purchases found.');
+        alert('⚠️ Ad not ready yet. Please try again in a moment.');
       }
     } catch (error) {
-      console.error('Restore error:', error);
-      alert('❌ Failed to restore purchases. Please try again.');
+      console.error('Rewarded ad error:', error);
+      alert('❌ Ad failed to load. Please try again.');
     } finally {
-      setIsRestoringPurchases(false);
+      setIsWatchingAds(false);
     }
-  };
+  }, [isWatchingAds, recordRewardedAd]);
 
   /**
-   * Watch rewarded ad for free coins
+   * Watch a single rewarded ad for coins
    */
   const handleWatchAd = useCallback(async () => {
-    const success = await showRewardedAd((reward) => {
-      addCoins(reward.amount);
-    });
-    
-    if (success) {
-      alert('🎉 25 coins earned!');
-    }
-  }, [addCoins]);
+    await watchRewardedAds(1);
+  }, [watchRewardedAds]);
 
   const handleBuyPowerUp = (type: PowerUpType, cost: number) => {
     const success = buyPowerUp(type, quantity, cost);
@@ -163,15 +86,19 @@ export const ShopScreen = ({ onBack }: ShopScreenProps) => {
       setSelectedPowerUp(null);
       setQuantity(1);
     } else {
-      alert('Not enough coins! Play more to earn coins or purchase a coin pack.');
+      alert('Not enough coins! Play more or watch ads to earn coins.');
     }
   };
 
-  // Get price for a product
-  const getProductPrice = (productId: string): string => {
-    const product = products.find(p => p.productId === productId);
-    return product?.price || 'Loading...';
-  };
+  const rewardAmount = ADMOB_CONFIG.rewardAmount;
+  const adCoinDisplay = rewardAmount * (premiumPass.active ? 2 : 1);
+  const premiumAdsRequired = ADMOB_CONFIG.premiumUnlockAds;
+  const premiumProgress = Math.min(rewardedAdsWatched, premiumAdsRequired);
+  const premiumProgressPercent = premiumAdsRequired > 0
+    ? Math.min((premiumProgress / premiumAdsRequired) * 100, 100)
+    : 100;
+  const adsRemaining = Math.max(premiumAdsRequired - rewardedAdsWatched, 0);
+  const rewardedReady = isRewardedAdReady();
 
   const benefits = [
     {
@@ -196,24 +123,23 @@ export const ShopScreen = ({ onBack }: ShopScreenProps) => {
     },
   ];
 
-  // Coin packs with Google Play pricing
-  const coinPacks = [
-    { 
-      productId: PRODUCT_IDS.COINS_100, 
-      amount: BILLING_PRODUCTS.coins_100.coins, 
-      emoji: '💰',
+  const adBundles = [
+    {
+      ads: 1,
+      amount: rewardAmount,
+      emoji: '🎬',
     },
-    { 
-      productId: PRODUCT_IDS.COINS_500, 
-      amount: BILLING_PRODUCTS.coins_500.coins, 
-      emoji: '💎', 
-      badge: BILLING_PRODUCTS.coins_500.badge,
+    {
+      ads: 3,
+      amount: rewardAmount * 3,
+      emoji: '🍿',
+      badge: 'Popular',
     },
-    { 
-      productId: PRODUCT_IDS.COINS_1200, 
-      amount: BILLING_PRODUCTS.coins_1200.coins, 
-      emoji: '👑', 
-      badge: BILLING_PRODUCTS.coins_1200.badge,
+    {
+      ads: 5,
+      amount: rewardAmount * 5,
+      emoji: '🎯',
+      badge: 'Best Value',
     },
   ];
 
@@ -270,32 +196,30 @@ export const ShopScreen = ({ onBack }: ShopScreenProps) => {
             </div>
             <div className="flex gap-2">
               {/* Watch Ad for Coins Button */}
-              {!premiumPass.active && (
-                <motion.button
-                  onClick={handleWatchAd}
-                  disabled={!isRewardedAdReady()}
-                  className="
-                    bg-gradient-to-r from-green-500 to-emerald-500
-                    text-white font-semibold
-                    px-4 py-2 rounded-xl
-                    flex items-center gap-2
-                    hover:scale-105 active:scale-95
-                    transition-all
-                    disabled:opacity-50
-                  "
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Play className="w-4 h-4" />
-                  +25
-                </motion.button>
-              )}
+              <motion.button
+                onClick={handleWatchAd}
+                disabled={!rewardedReady || isWatchingAds}
+                className="
+                  bg-gradient-to-r from-green-500 to-emerald-500
+                  text-white font-semibold
+                  px-4 py-2 rounded-xl
+                  flex items-center gap-2
+                  hover:scale-105 active:scale-95
+                  transition-all
+                  disabled:opacity-50
+                "
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Play className="w-4 h-4" />
+                {isWatchingAds || !rewardedReady ? 'Loading...' : `+${adCoinDisplay}`}
+              </motion.button>
               <div className="text-5xl">💎</div>
             </div>
           </div>
         </motion.div>
 
-        {/* Coin Packs - Google Play Billing */}
+        {/* Rewarded Ads - Earn Coins */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -304,15 +228,15 @@ export const ShopScreen = ({ onBack }: ShopScreenProps) => {
         >
           <div className="flex items-center gap-2 mb-4">
             <Coins className="w-5 h-5 text-yellow-400" />
-            <h2 className="text-white font-bold text-xl">Coin Packs</h2>
+            <h2 className="text-white font-bold text-xl">Rewarded Ads</h2>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
-            {coinPacks.map((pack, index) => (
+            {adBundles.map((pack, index) => (
               <motion.button
-                key={pack.productId}
-                onClick={() => handlePurchaseCoins(pack.productId)}
-                disabled={isProcessingPayment}
+                key={`${pack.ads}-ads`}
+                onClick={() => watchRewardedAds(pack.ads)}
+                disabled={isWatchingAds || !rewardedReady}
                 className="
                   relative
                   bg-gradient-to-br from-yellow-500/20 to-orange-500/20
@@ -330,8 +254,8 @@ export const ShopScreen = ({ onBack }: ShopScreenProps) => {
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2 + index * 0.05 }}
-                whileHover={!isProcessingPayment ? { scale: 1.05 } : {}}
-                whileTap={!isProcessingPayment ? { scale: 0.95 } : {}}
+                whileHover={!isWatchingAds && rewardedReady ? { scale: 1.05 } : {}}
+                whileTap={!isWatchingAds && rewardedReady ? { scale: 0.95 } : {}}
               >
                 {pack.badge && (
                   <div className="absolute -top-2 -right-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
@@ -343,15 +267,15 @@ export const ShopScreen = ({ onBack }: ShopScreenProps) => {
                   {pack.amount.toLocaleString()}
                 </div>
                 <div className="text-yellow-300 text-sm text-center font-semibold">
-                  {getProductPrice(pack.productId)}
+                  Watch {pack.ads} ad{pack.ads > 1 ? 's' : ''}
                 </div>
               </motion.button>
             ))}
           </div>
-          
-          {/* Google Play Billing Notice */}
+
           <p className="text-xs text-white/40 text-center mt-3">
-            Powered by Google Play Billing
+            Watch rewarded ads to earn coins instantly.
+            {premiumPass.active && ' Premium doubles ad rewards.'}
           </p>
         </motion.div>
 
@@ -428,7 +352,7 @@ export const ShopScreen = ({ onBack }: ShopScreenProps) => {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Crown className="w-8 h-8 text-yellow-400 fill-current" />
-                <h2 className="text-white font-black text-2xl">Premium Pack</h2>
+                <h2 className="text-white font-black text-2xl">Premium Pass</h2>
               </div>
               {premiumPass.active && (
                 <div className="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
@@ -459,84 +383,72 @@ export const ShopScreen = ({ onBack }: ShopScreenProps) => {
               ))}
             </div>
 
-            {/* Purchase Button */}
+            {/* Premium Unlock */}
             {!premiumPass.active ? (
-              <motion.button
-                onClick={handlePurchasePremium}
-                disabled={isProcessingPayment}
-                className="
-                  w-full
-                  bg-gradient-to-r from-yellow-500 to-orange-500
-                  text-white
-                  font-black
-                  text-lg
-                  py-4
-                  rounded-2xl
-                  shadow-2xl shadow-yellow-500/40
-                  hover:shadow-yellow-500/60
-                  hover:scale-105
-                  active:scale-95
-                  transition-all
-                  flex items-center justify-center gap-2
-                  disabled:opacity-50
-                  disabled:cursor-not-allowed
-                "
-                whileHover={!isProcessingPayment ? { scale: 1.05 } : {}}
-                whileTap={!isProcessingPayment ? { scale: 0.95 } : {}}
-              >
-                <Crown className="w-6 h-6 fill-current" />
-                <span>
-                  {isProcessingPayment ? 'Processing...' : `Upgrade Now - ${getProductPrice(PRODUCT_IDS.PREMIUM_PACK)}`}
-                </span>
-              </motion.button>
+              <div className="space-y-4">
+                <div className="bg-slate-800/50 rounded-xl p-4 border border-white/10">
+                  <div className="flex items-center justify-between text-sm text-white/70">
+                    <span>Ads watched</span>
+                    <span className="font-semibold text-white">
+                      {premiumProgress}/{premiumAdsRequired}
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-700/50 rounded-full h-2 mt-2 overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-yellow-400 to-orange-400"
+                      style={{ width: `${premiumProgressPercent}%` }}
+                    />
+                  </div>
+                  <div className="text-xs text-white/60 mt-2">
+                    Watch {adsRemaining} more ad{adsRemaining === 1 ? '' : 's'} to unlock Premium.
+                  </div>
+                </div>
+
+                <motion.button
+                  onClick={handleWatchAd}
+                  disabled={!rewardedReady || isWatchingAds}
+                  className="
+                    w-full
+                    bg-gradient-to-r from-yellow-500 to-orange-500
+                    text-white
+                    font-black
+                    text-lg
+                    py-4
+                    rounded-2xl
+                    shadow-2xl shadow-yellow-500/40
+                    hover:shadow-yellow-500/60
+                    hover:scale-105
+                    active:scale-95
+                    transition-all
+                    flex items-center justify-center gap-2
+                    disabled:opacity-50
+                    disabled:cursor-not-allowed
+                  "
+                  whileHover={!isWatchingAds && rewardedReady ? { scale: 1.05 } : {}}
+                  whileTap={!isWatchingAds && rewardedReady ? { scale: 0.95 } : {}}
+                >
+                  <Crown className="w-6 h-6 fill-current" />
+                  <span>
+                    {isWatchingAds || !rewardedReady ? 'Loading Ad...' : `Watch Ad (+${adCoinDisplay})`}
+                  </span>
+                </motion.button>
+              </div>
             ) : (
               <div className="text-center">
                 <div className="text-green-400 font-bold text-lg mb-2 flex items-center justify-center gap-2">
                   <Check className="w-6 h-6" />
-                  You have Premium!
+                  Premium Unlocked!
                 </div>
                 <div className="text-sm text-white/60">
-                  Enjoy all premium benefits forever!
+                  Enjoy all premium benefits anytime.
                 </div>
               </div>
             )}
-            
-            {/* Google Play Billing Notice */}
+
             <p className="text-xs text-white/40 text-center mt-4">
-              One-time purchase via Google Play
+              No purchases required. Premium is earned by watching ads.
             </p>
           </div>
-        </motion.div>
-
-        {/* Restore Purchases Button */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="mb-8"
-        >
-          <button
-            onClick={handleRestorePurchases}
-            disabled={isRestoringPurchases}
-            className="
-              w-full
-              bg-slate-800/50
-              text-white/80
-              font-semibold
-              py-3
-              rounded-xl
-              border border-white/10
-              hover:bg-slate-700/50
-              active:scale-95
-              transition-all
-              disabled:opacity-50
-            "
-          >
-            {isRestoringPurchases ? 'Restoring...' : 'Restore Purchases'}
-          </button>
-          <p className="text-xs text-white/40 text-center mt-2">
-            Reinstalled the app? Restore your previous purchases here.
-          </p>
         </motion.div>
       </div>
 

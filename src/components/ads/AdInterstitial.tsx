@@ -8,8 +8,8 @@
  * - Game over (every 3 games)
  * - Level complete
  * 
- * IMPORTANT: 
- * - Premium users see NO ADS
+ * IMPORTANT:
+ * - Premium Pass disables forced ads
  * - Respects frequency limits to avoid policy violations
  * 
  * @see https://developers.google.com/admob/android/interstitial
@@ -43,7 +43,7 @@ export const AdInterstitial = ({ onAdClosed, trigger }: AdInterstitialProps) => 
    * Show interstitial ad with proper checks
    */
   const displayInterstitial = useCallback(async () => {
-    // Don't show if premium or already showing
+    // Don't show if Premium Pass or already showing
     if (!shouldShowAds() || premiumPass.active || isShowingAd) {
       onAdClosed?.();
       return;

@@ -70,6 +70,7 @@ export interface UserProgress {
   currentLevel: number;
   completedLevels: number[];
   coins: number;
+  rewardedAdsWatched: number;
   premiumPass: PremiumPass;
   dailyChallenges: DailyChallenge[];
   lastPlayedDate: string;
