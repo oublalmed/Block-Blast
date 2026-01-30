@@ -16,19 +16,7 @@
  */
 
 import { Capacitor } from '@capacitor/core';
-import {
-  AdMob,
-  type AdMobRewardItem,
-  type AdMobInitializationOptions,
-  type AdOptions,
-  type BannerAdOptions,
-  type RewardAdOptions,
-  BannerAdPluginEvents,
-  BannerAdPosition,
-  BannerAdSize,
-  InterstitialAdPluginEvents,
-  RewardAdPluginEvents,
-} from '@capacitor-community/admob';
+import { AdMob, BannerAdPosition, BannerAdSize, RewardAdPluginEvents } from '@capacitor-community/admob';
 import { ADMOB_CONFIG } from '../config/payment';
 
 // Ad unit IDs for different ad types
@@ -70,124 +58,29 @@ type AdEventCallback = (event: string) => void;
 
 const rewardCallbacks: RewardCallback[] = [];
 const adEventCallbacks: AdEventCallback[] = [];
-let listenersAttached = false;
 let pendingRewardCallback: RewardCallback | null = null;
-let rewardGrantedForShow = false;
+let rewardListenerAttached = false;
 
-const isNativeAdMob = (): boolean => Capacitor.isNativePlatform();
-
-const getInitializationOptions = (): AdMobInitializationOptions => ({
-  initializeForTesting: ADMOB_CONFIG.testMode,
-  testingDevices: ADMOB_CONFIG.testDeviceIds.length > 0 ? ADMOB_CONFIG.testDeviceIds : undefined,
-});
-
-const getBannerOptions = (): BannerAdOptions => ({
-  adId: ADMOB_CONFIG.adUnitIds.banner,
-  adSize: BannerAdSize.ADAPTIVE_BANNER,
-  position: BannerAdPosition.BOTTOM_CENTER,
-  margin: 0,
-  isTesting: ADMOB_CONFIG.testMode,
-});
-
-const getInterstitialOptions = (): AdOptions => ({
-  adId: ADMOB_CONFIG.adUnitIds.interstitial,
-  isTesting: ADMOB_CONFIG.testMode,
-  immersiveMode: true,
-});
-
-const getRewardedOptions = (): RewardAdOptions => ({
-  adId: ADMOB_CONFIG.adUnitIds.rewarded,
-  isTesting: ADMOB_CONFIG.testMode,
-});
-
-const grantReward = (rewardItem?: AdMobRewardItem): void => {
-  if (rewardGrantedForShow) {
+const ensureRewardListener = (): void => {
+  if (rewardListenerAttached) {
     return;
   }
 
-  rewardGrantedForShow = true;
-  const reward = {
-    type: rewardItem?.type ?? 'coins',
-    amount: rewardItem?.amount ?? ADMOB_CONFIG.rewardAmount,
-  };
+  rewardListenerAttached = true;
 
-  if (pendingRewardCallback) {
-    pendingRewardCallback(reward);
-    pendingRewardCallback = null;
-  }
-
-  rewardCallbacks.forEach((cb) => cb(reward));
-  notifyAdEvent('rewarded_completed');
-};
-
-const attachAdMobListeners = (): void => {
-  if (listenersAttached || !isNativeAdMob()) {
-    return;
-  }
-
-  listenersAttached = true;
-
-  AdMob.addListener(BannerAdPluginEvents.Loaded, () => {
-    notifyAdEvent('banner_loaded');
-  });
-  AdMob.addListener(BannerAdPluginEvents.FailedToLoad, () => {
-    notifyAdEvent('banner_failed');
-  });
-  AdMob.addListener(BannerAdPluginEvents.Opened, () => {
-    notifyAdEvent('banner_opened');
-  });
-  AdMob.addListener(BannerAdPluginEvents.Closed, () => {
-    notifyAdEvent('banner_closed');
-  });
-  AdMob.addListener(BannerAdPluginEvents.AdImpression, () => {
-    notifyAdEvent('banner_impression');
-  });
-
-  AdMob.addListener(InterstitialAdPluginEvents.Loaded, () => {
-    state.interstitialReady = true;
-    notifyAdEvent('interstitial_loaded');
-  });
-  AdMob.addListener(InterstitialAdPluginEvents.FailedToLoad, () => {
-    state.interstitialReady = false;
-    notifyAdEvent('interstitial_failed_load');
-  });
-  AdMob.addListener(InterstitialAdPluginEvents.Showed, () => {
-    notifyAdEvent('interstitial_shown');
-  });
-  AdMob.addListener(InterstitialAdPluginEvents.Dismissed, () => {
-    state.interstitialReady = false;
-    notifyAdEvent('interstitial_dismissed');
-    preloadInterstitial();
-  });
-  AdMob.addListener(InterstitialAdPluginEvents.FailedToShow, () => {
-    state.interstitialReady = false;
-    notifyAdEvent('interstitial_failed_show');
-    preloadInterstitial();
-  });
-
-  AdMob.addListener(RewardAdPluginEvents.Loaded, () => {
-    state.rewardedReady = true;
-    notifyAdEvent('rewarded_loaded');
-  });
-  AdMob.addListener(RewardAdPluginEvents.FailedToLoad, () => {
-    state.rewardedReady = false;
-    notifyAdEvent('rewarded_failed_load');
-  });
-  AdMob.addListener(RewardAdPluginEvents.Showed, () => {
-    notifyAdEvent('rewarded_shown');
-  });
   AdMob.addListener(RewardAdPluginEvents.Rewarded, (reward) => {
-    grantReward(reward);
-  });
-  AdMob.addListener(RewardAdPluginEvents.Dismissed, () => {
-    state.rewardedReady = false;
-    notifyAdEvent('rewarded_dismissed');
-    preloadRewarded();
-  });
-  AdMob.addListener(RewardAdPluginEvents.FailedToShow, () => {
-    state.rewardedReady = false;
-    notifyAdEvent('rewarded_failed_show');
-    preloadRewarded();
+    const rewardPayload = {
+      type: reward.type ?? 'coins',
+      amount: reward.amount ?? ADMOB_CONFIG.rewardAmount,
+    };
+
+    if (pendingRewardCallback) {
+      pendingRewardCallback(rewardPayload);
+      pendingRewardCallback = null;
+    }
+
+    rewardCallbacks.forEach((cb) => cb(rewardPayload));
+    notifyAdEvent('rewarded_completed');
   });
 };
 
@@ -203,7 +96,7 @@ export const initializeAds = async (): Promise<boolean> => {
   }
 
   // Skip on web platform - AdMob only works on native
-  if (!isNativeAdMob()) {
+  if (!Capacitor.isNativePlatform()) {
     console.log('📱 AdMob only available on native platforms');
     state.isInitialized = true;
     state.isAvailable = false;
@@ -220,12 +113,13 @@ export const initializeAds = async (): Promise<boolean> => {
   try {
     console.log('🔗 Initializing Google AdMob...');
 
-    await AdMob.initialize(getInitializationOptions());
+    await AdMob.initialize({
+      initializeForTesting: ADMOB_CONFIG.testMode,
+      testingDevices: ADMOB_CONFIG.testDeviceIds,
+    });
 
     state.isInitialized = true;
     state.isAvailable = true;
-
-    attachAdMobListeners();
 
     console.log('✅ Google AdMob initialized successfully');
 
@@ -281,8 +175,12 @@ export const showBanner = async (): Promise<boolean> => {
 
   try {
     console.log('📺 Showing banner ad...');
-
-    await AdMob.showBanner(getBannerOptions());
+    await AdMob.showBanner({
+      adId: ADMOB_CONFIG.adUnitIds.banner,
+      adSize: BannerAdSize.ADAPTIVE_BANNER,
+      position: BannerAdPosition.BOTTOM_CENTER,
+      isTesting: ADMOB_CONFIG.testMode,
+    });
 
     notifyAdEvent('banner_shown');
     return true;
@@ -321,8 +219,10 @@ export const preloadInterstitial = async (): Promise<boolean> => {
 
   try {
     console.log('⏳ Preloading interstitial ad...');
-
-    await AdMob.prepareInterstitial(getInterstitialOptions());
+    await AdMob.prepareInterstitial({
+      adId: ADMOB_CONFIG.adUnitIds.interstitial,
+      isTesting: ADMOB_CONFIG.testMode,
+    });
     state.interstitialReady = true;
     console.log('✅ Interstitial ad preloaded');
     return true;
@@ -358,16 +258,13 @@ export const showInterstitial = async (): Promise<boolean> => {
     return false;
   }
 
-  if (!state.interstitialReady) {
-    console.log('⏳ Interstitial not ready, preloading...');
-    await preloadInterstitial();
-    if (!state.interstitialReady) {
-      return false;
-    }
-  }
-
   try {
     console.log('📺 Showing interstitial ad...');
+
+    await AdMob.prepareInterstitial({
+      adId: ADMOB_CONFIG.adUnitIds.interstitial,
+      isTesting: ADMOB_CONFIG.testMode,
+    });
 
     await AdMob.showInterstitial();
     
@@ -413,8 +310,10 @@ export const preloadRewarded = async (): Promise<boolean> => {
 
   try {
     console.log('⏳ Preloading rewarded ad...');
-
-    await AdMob.prepareRewardVideoAd(getRewardedOptions());
+    await AdMob.prepareRewardVideoAd({
+      adId: ADMOB_CONFIG.adUnitIds.rewarded,
+      isTesting: ADMOB_CONFIG.testMode,
+    });
     state.rewardedReady = true;
     console.log('✅ Rewarded ad preloaded');
     return true;
@@ -441,23 +340,18 @@ export const showRewardedAd = async (onReward?: RewardCallback): Promise<boolean
     return false;
   }
 
-  if (!state.rewardedReady) {
-    console.log('⏳ Rewarded ad not ready, preloading...');
-    await preloadRewarded();
-    if (!state.rewardedReady) {
-      return false;
-    }
-  }
-
   try {
     console.log('🎁 Showing rewarded ad...');
-    rewardGrantedForShow = false;
-    pendingRewardCallback = onReward ?? null;
+    await AdMob.prepareRewardVideoAd({
+      adId: ADMOB_CONFIG.adUnitIds.rewarded,
+      isTesting: ADMOB_CONFIG.testMode,
+    });
 
-    const rewardItem = await AdMob.showRewardVideoAd();
-    if (rewardItem) {
-      grantReward(rewardItem);
-    }
+    pendingRewardCallback = onReward ?? null;
+    ensureRewardListener();
+
+    await AdMob.showRewardVideoAd();
+    notifyAdEvent('rewarded_shown');
 
     state.rewardedReady = false;
     preloadRewarded();
