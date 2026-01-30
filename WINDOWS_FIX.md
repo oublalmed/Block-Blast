@@ -1,6 +1,6 @@
 # 🪟 Windows - Fix Vite Import Error
 
-If you see the error `Failed to resolve import "@stripe/stripe-js"`, follow these steps:
+If you see a dependency error like `Failed to resolve import`, follow these steps:
 
 ---
 
