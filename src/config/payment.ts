@@ -33,6 +33,12 @@ export const ADMOB_CONFIG = {
   // Use test ads during development
   testMode: import.meta.env.MODE !== 'production',
 
+  // Optional comma-separated test device IDs for AdMob
+  testDeviceIds: (import.meta.env.VITE_ADMOB_TEST_DEVICE_IDS || '')
+    .split(',')
+    .map((id: string) => id.trim())
+    .filter(Boolean),
+
   // AdMob App ID (required in app config, not here)
   // Configure in capacitor.config.ts or AndroidManifest.xml
   appId: import.meta.env.VITE_ADMOB_APP_ID || 'ca-app-pub-3940256099942544~3347511713', // Test App ID
