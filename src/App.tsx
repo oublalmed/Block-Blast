@@ -8,8 +8,8 @@ import { AchievementsScreen } from './screens/AchievementsScreen';
 import { AchievementUnlocked, useAchievementNotifications } from './components/ui/AchievementUnlocked';
 import { useGameStore } from './store/gameStore';
 import { getLevelData } from './utils/gameLogic';
-import { initializeAdSense, initializeAnalytics } from './services/ads';
-import { REVENUE_TRACKING } from './config/payment';
+import { initializeAds } from './services/adsService';
+import { initializeBilling, endBilling, restorePurchases } from './services/billingService';
 
 type Screen = 'home' | 'game' | 'level' | 'shop' | 'challenges' | 'challenge' | 'achievements';
 
@@ -27,17 +27,24 @@ function App() {
   const { completeLevel, completeDailyChallenge, dailyChallenges, checkAndUnlockAchievements } = useGameStore();
   const { currentAchievement, showMultipleAchievements, closeNotification } = useAchievementNotifications();
 
-  // Initialize monetization services on app load
+  // Initialize Play Billing + AdMob on app load (Google Play requirement).
   useEffect(() => {
-    // Initialize Google AdSense for ad revenue
-    initializeAdSense();
+    const bootstrapMonetization = async () => {
+      try {
+        await initializeBilling();
+        await initializeAds();
+        await restorePurchases();
+        console.log('💰 Monetization services initialized');
+      } catch (error) {
+        console.error('Failed to initialize monetization services:', error);
+      }
+    };
 
-    // Initialize Google Analytics for revenue tracking
-    if (REVENUE_TRACKING.enabled && REVENUE_TRACKING.ga4MeasurementId) {
-      initializeAnalytics(REVENUE_TRACKING.ga4MeasurementId);
-    }
+    bootstrapMonetization();
 
-    console.log('💰 Monetization services initialized');
+    return () => {
+      endBilling();
+    };
   }, []);
 
   // Check for achievements periodically (when returning to home screen)

@@ -8,7 +8,7 @@ interface ChallengesScreenProps {
 }
 
 export const ChallengesScreen = ({ onBack, onStartChallenge }: ChallengesScreenProps) => {
-  const { dailyChallenges, premiumPass } = useGameStore();
+  const { dailyChallenges, isPremium } = useGameStore();
 
   const getTimeRemaining = (expiresAt: Date) => {
     const now = new Date();
@@ -68,7 +68,7 @@ export const ChallengesScreen = ({ onBack, onStartChallenge }: ChallengesScreenP
               </div>
               <div className="text-sm text-white/60">
                 Earn bonus coins and rewards by completing challenges
-                {premiumPass.active && ' • 2x rewards with Premium!'}
+                {isPremium && ' • 2x rewards with Premium!'}
               </div>
             </div>
           </div>
@@ -123,9 +123,9 @@ export const ChallengesScreen = ({ onBack, onStartChallenge }: ChallengesScreenP
                     <div className="flex items-center gap-1 text-xs sm:text-sm">
                       <Coins className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-yellow-400" />
                       <span className="text-yellow-400 font-semibold">
-                        +{challenge.reward * (premiumPass.active ? 2 : 1)}
+                        +{challenge.reward * (isPremium ? 2 : 1)}
                       </span>
-                      {premiumPass.active && (
+                      {isPremium && (
                         <span className="text-[9px] sm:text-[10px] text-yellow-300 ml-0.5 sm:ml-1">2x</span>
                       )}
                     </div>

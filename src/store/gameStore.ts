@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { UserProgress, DailyChallenge } from '../types/game';
 import { ACHIEVEMENTS, type Achievement } from '../types/achievements';
 import type { PowerUpType } from '../types/powerups';
@@ -7,7 +8,7 @@ import type { PowerUpType } from '../types/powerups';
 interface GameStore extends UserProgress {
   // Actions
   updateScore: (score: number) => void;
-  addCoins: (amount: number) => void;
+  addCoins: (amount: number, options?: { applyPremiumMultiplier?: boolean }) => void;
   spendCoins: (amount: number) => boolean;
   completeLevel: (levelId: number, score: number, stars: number) => void;
   unlockLevel: (levelId: number) => void;
@@ -79,15 +80,7 @@ const initialState: UserProgress = {
   currentLevel: 1,
   completedLevels: [],
   coins: 0,
-  premiumPass: {
-    active: false,
-    benefits: {
-      noAds: false,
-      doubleRewards: false,
-      exclusivePieces: false,
-      dailyBonus: false,
-    },
-  },
+  isPremium: false,
   dailyChallenges: generateDailyChallenges(),
   lastPlayedDate: new Date().toISOString().split('T')[0],
   achievements: [],
@@ -117,9 +110,10 @@ export const useGameStore = create<GameStore>()(
         });
       },
 
-      addCoins: (amount: number) => {
+      addCoins: (amount: number, options?: { applyPremiumMultiplier?: boolean }) => {
         set((state) => {
-          const multiplier = state.premiumPass.active ? 2 : 1;
+          const applyPremiumMultiplier = options?.applyPremiumMultiplier ?? true;
+          const multiplier = applyPremiumMultiplier && state.isPremium ? 2 : 1;
           return {
             coins: state.coins + amount * multiplier,
           };
@@ -143,7 +137,7 @@ export const useGameStore = create<GameStore>()(
 
           // Reward coins based on stars
           const coinReward = stars * 50;
-          const multiplier = state.premiumPass.active ? 2 : 1;
+          const multiplier = state.isPremium ? 2 : 1;
 
           return {
             completedLevels,
@@ -171,7 +165,7 @@ export const useGameStore = create<GameStore>()(
 
           const challenge = state.dailyChallenges.find((c) => c.id === challengeId);
           const reward = challenge ? challenge.reward : 0;
-          const multiplier = state.premiumPass.active ? 2 : 1;
+          const multiplier = state.isPremium ? 2 : 1;
 
           return {
             dailyChallenges,
@@ -181,23 +175,7 @@ export const useGameStore = create<GameStore>()(
       },
 
       activatePremiumPass: () => {
-        const now = new Date();
-        const expiresAt = new Date(now);
-        expiresAt.setMonth(expiresAt.getMonth() + 1);
-
-        set({
-          premiumPass: {
-            active: true,
-            purchaseDate: now,
-            expiresAt,
-            benefits: {
-              noAds: true,
-              doubleRewards: true,
-              exclusivePieces: true,
-              dailyBonus: true,
-            },
-          },
-        });
+        set({ isPremium: true });
       },
 
       incrementGamesPlayed: () => {
@@ -301,7 +279,7 @@ export const useGameStore = create<GameStore>()(
               if (achievement.id === 'first_game') {
                 shouldUnlock = state.gamesPlayed >= 1;
               } else if (achievement.id === 'premium_user') {
-                shouldUnlock = state.premiumPass.active;
+                shouldUnlock = state.isPremium;
               } else if (achievement.id.startsWith('daily_streak_')) {
                 shouldUnlock = state.consecutiveDays >= achievement.requirement;
               }
@@ -372,6 +350,23 @@ export const useGameStore = create<GameStore>()(
     }),
     {
       name: 'block-blast-storage',
+      storage: createJSONStorage(() => (typeof window !== 'undefined' ? localStorage : AsyncStorage)),
+      version: 2,
+      migrate: (persistedState) => {
+        if (!persistedState) {
+          return persistedState;
+        }
+
+        if ('premiumPass' in persistedState && !('isPremium' in persistedState)) {
+          const { premiumPass, ...rest } = persistedState as { premiumPass?: { active?: boolean } };
+          return {
+            ...rest,
+            isPremium: Boolean(premiumPass?.active),
+          };
+        }
+
+        return persistedState;
+      },
     }
   )
 );

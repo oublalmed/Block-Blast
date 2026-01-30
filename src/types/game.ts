@@ -44,18 +44,6 @@ export interface DailyChallenge {
   expiresAt: Date;
 }
 
-export interface PremiumPass {
-  active: boolean;
-  purchaseDate?: Date;
-  expiresAt?: Date;
-  benefits: {
-    noAds: boolean;
-    doubleRewards: boolean;
-    exclusivePieces: boolean;
-    dailyBonus: boolean;
-  };
-}
-
 export interface PowerUpInventory {
   undo: number;
   hint: number;
@@ -70,7 +58,7 @@ export interface UserProgress {
   currentLevel: number;
   completedLevels: number[];
   coins: number;
-  premiumPass: PremiumPass;
+  isPremium: boolean;
   dailyChallenges: DailyChallenge[];
   lastPlayedDate: string;
   achievements: string[]; // List of unlocked achievement IDs

@@ -23,7 +23,7 @@ export const HomeScreen = ({
   const {
     bestScore,
     coins,
-    premiumPass,
+    isPremium,
     currentLevel,
     completedLevels,
     dailyChallenges,
@@ -84,7 +84,7 @@ export const HomeScreen = ({
               <h1 className="text-white font-black text-xl sm:text-3xl leading-none tracking-tight">
                 Block Blast
               </h1>
-              {premiumPass.active && (
+              {isPremium && (
                 <div className="flex items-center gap-1 mt-0.5 sm:mt-1">
                   <Crown className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-400 fill-current" />
                   <span className="text-yellow-400 text-xs sm:text-sm font-semibold">Premium</span>
@@ -353,7 +353,7 @@ export const HomeScreen = ({
         </motion.div>
 
         {/* Premium Upsell (if not premium) */}
-        {!premiumPass.active && (
+        {!isPremium && (
           <motion.button
             onClick={onOpenShop}
             className="

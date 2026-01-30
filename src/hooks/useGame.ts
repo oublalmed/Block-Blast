@@ -29,7 +29,7 @@ export const useGame = (gridSize: number = 8) => {
   const [history, setHistory] = useState<GameState[]>([]);
   const [hint, setHint] = useState<{ x: number; y: number; pieceId: string } | null>(null);
 
-  const { premiumPass, updateScore, incrementGamesPlayed, updateMaxCombo, incrementPerfectClears, usePowerUp } = useGameStore();
+  const { isPremium, updateScore, incrementGamesPlayed, updateMaxCombo, incrementPerfectClears, usePowerUp } = useGameStore();
 
   useEffect(() => {
     initGame();
@@ -37,7 +37,7 @@ export const useGame = (gridSize: number = 8) => {
 
   const initGame = useCallback(() => {
     setGrid(createEmptyGrid(gridSize));
-    setPieces(generatePieces(3, premiumPass.benefits.exclusivePieces));
+    setPieces(generatePieces(3, isPremium));
     setScore(0);
     setCombo(0);
     setIsGameOver(false);
@@ -45,7 +45,7 @@ export const useGame = (gridSize: number = 8) => {
     setHistory([]);
     setHint(null);
     vibrate(50);
-  }, [gridSize, premiumPass.benefits.exclusivePieces]);
+  }, [gridSize, isPremium]);
 
   const placePiece = useCallback(
     (piece: Piece, startX: number, startY: number): boolean => {
@@ -123,7 +123,7 @@ export const useGame = (gridSize: number = 8) => {
         const allPlaced = pieces.every((p) => p.id === piece.id || p.placed);
         if (allPlaced) {
           setTimeout(() => {
-            const newPieces = generatePieces(3, premiumPass.benefits.exclusivePieces);
+            const newPieces = generatePieces(3, isPremium);
             setPieces(newPieces);
 
             // Check game over
@@ -151,7 +151,7 @@ export const useGame = (gridSize: number = 8) => {
       vibrate(50);
       return true;
     },
-    [grid, pieces, score, combo, gridSize, premiumPass.benefits.exclusivePieces]
+    [grid, pieces, score, combo, gridSize, isPremium]
   );
 
   const handleGameOver = useCallback(

@@ -8,6 +8,7 @@ import { GameOverModal } from '../components/ui/GameOverModal';
 import { ComboPopup } from '../components/ui/ComboPopup';
 import { ScoreFloat } from '../components/ui/ScoreFloat';
 import { AdBanner } from '../components/ads/AdBanner';
+import { AdInterstitial } from '../components/ads/AdInterstitial';
 import { useGame } from '../hooks/useGame';
 import { useGameStore } from '../store/gameStore';
 import type { Piece } from '../types/game';
@@ -41,7 +42,7 @@ export const GameScreen = ({
     hint,
   } = useGame();
 
-  const { addCoins, premiumPass } = useGameStore();
+  const { addCoins, isPremium } = useGameStore();
 
   const [draggingPiece, setDraggingPiece] = useState<Piece | null>(null);
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
@@ -51,6 +52,9 @@ export const GameScreen = ({
   const [showCombo, setShowCombo] = useState(false);
   const [showScoreFloat, setShowScoreFloat] = useState(false);
   const [unplaceablePieces, setUnplaceablePieces] = useState<Set<string>>(new Set());
+  const [interstitialTrigger, setInterstitialTrigger] = useState<'game-over' | 'level-complete' | 'manual' | null>(null);
+  const [gameOverAdShown, setGameOverAdShown] = useState(false);
+  const [levelCompleteAdShown, setLevelCompleteAdShown] = useState(false);
 
   // Update unplaceable pieces
   useEffect(() => {
@@ -79,6 +83,23 @@ export const GameScreen = ({
       onLevelComplete?.(score, stars);
     }
   }, [score, levelMode, targetScore, onLevelComplete]);
+
+  useEffect(() => {
+    if (isGameOver && !gameOverAdShown) {
+      setGameOverAdShown(true);
+      setInterstitialTrigger('game-over');
+    }
+    if (!isGameOver && gameOverAdShown) {
+      setGameOverAdShown(false);
+    }
+  }, [isGameOver, gameOverAdShown]);
+
+  useEffect(() => {
+    if (levelMode && targetScore && score >= targetScore && !levelCompleteAdShown) {
+      setLevelCompleteAdShown(true);
+      setInterstitialTrigger('level-complete');
+    }
+  }, [levelMode, targetScore, score, levelCompleteAdShown]);
 
   // Award coins on game over
   useEffect(() => {
@@ -273,7 +294,14 @@ export const GameScreen = ({
       />
 
       {/* Ad Banner */}
-      {!premiumPass.active && <AdBanner position="bottom" />}
+      {!isPremium && <AdBanner position="bottom" />}
+
+      {interstitialTrigger && (
+        <AdInterstitial
+          trigger={interstitialTrigger}
+          onAdClosed={() => setInterstitialTrigger(null)}
+        />
+      )}
     </div>
   );
 };
