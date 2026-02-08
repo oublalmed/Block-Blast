@@ -34,7 +34,11 @@ export const AdBanner = ({ position = 'bottom', onClose }: AdBannerProps) => {
   const isNative = Capacitor.isNativePlatform();
 
   // Don't show ads for Premium Pass users
-  const shouldDisplay = shouldShowAds() && !premiumPass.active && isVisible;
+  // On native: check full shouldShowAds() (requires AdMob init)
+  // On web: just check premium status and visibility (show placeholder)
+  const shouldDisplay = isNative
+    ? shouldShowAds() && !premiumPass.active && isVisible
+    : !premiumPass.active && isVisible;
 
   // Initialize banner ad on mount
   useEffect(() => {

@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "22848e8b-b5c9-4e0d-8227-dc123959c5bb"
+      }
+    },
+    "android": {
+      "package": "com.moublal.blockblast"
+    }
+  }
+}

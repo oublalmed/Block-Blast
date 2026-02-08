@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Share2, RotateCcw, Home, Trophy } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
+import { AdInterstitial } from '../ads/AdInterstitial';
 
 interface GameOverModalProps {
   isOpen: boolean;
@@ -19,6 +21,16 @@ export const GameOverModal = ({
 }: GameOverModalProps) => {
   const { bestScore } = useGameStore();
   const isNewBest = score > bestScore;
+  const [showInterstitial, setShowInterstitial] = useState(false);
+
+  const handlePlayAgain = () => {
+    setShowInterstitial(true);
+  };
+
+  const handleAdClosed = () => {
+    setShowInterstitial(false);
+    onPlayAgain();
+  };
 
   const handleShare = async () => {
     const shareData = {
@@ -150,7 +162,7 @@ export const GameOverModal = ({
               transition={{ delay: 0.8 }}
             >
               <button
-                onClick={onPlayAgain}
+                onClick={handlePlayAgain}
                 className="
                   w-full
                   bg-gradient-to-r from-green-500 to-green-600
@@ -220,6 +232,14 @@ export const GameOverModal = ({
             </motion.div>
           </motion.div>
         </motion.div>
+      )}
+
+      {/* Interstitial ad on Play Again (every 3 games) */}
+      {showInterstitial && (
+        <AdInterstitial
+          trigger="game-over"
+          onAdClosed={handleAdClosed}
+        />
       )}
     </AnimatePresence>
   );

@@ -7,7 +7,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
  * - Google AdMob for advertisements
  */
 const config: CapacitorConfig = {
-  appId: 'com.blockblast.game',
+  appId: 'com.moublal.blockblast',
   appName: 'Block Blast',
   webDir: 'dist',
   server: {

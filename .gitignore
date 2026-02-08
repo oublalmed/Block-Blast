@@ -17,6 +17,14 @@ android
 ios
 .capacitor
 
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Expo
+.expo
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

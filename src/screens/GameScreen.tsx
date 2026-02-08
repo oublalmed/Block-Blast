@@ -72,13 +72,15 @@ export const GameScreen = ({
     }
   }, [combo]);
 
-  // Handle level completion
+  // Handle level completion (only fire once)
+  const [levelCompleted, setLevelCompleted] = useState(false);
   useEffect(() => {
-    if (levelMode && targetScore && score >= targetScore) {
+    if (levelMode && targetScore && score >= targetScore && !levelCompleted) {
+      setLevelCompleted(true);
       const stars = Math.min(3, Math.floor(score / targetScore));
       onLevelComplete?.(score, stars);
     }
-  }, [score, levelMode, targetScore, onLevelComplete]);
+  }, [score, levelMode, targetScore, onLevelComplete, levelCompleted]);
 
   // Award coins on game over
   useEffect(() => {
@@ -173,6 +175,7 @@ export const GameScreen = ({
   }, [draggingPiece, handlePieceDrag]);
 
   const handlePlayAgain = () => {
+    setLevelCompleted(false);
     resetGame();
   };
 
